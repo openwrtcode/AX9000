@@ -1,0 +1,22 @@
+diff -Naur a/squashfs-tools/mksquashfs.c b/squashfs-tools/mksquashfs.c
+--- a/squashfs-tools/mksquashfs.c	2021-04-15 17:47:01.340246387 +0800
++++ b/squashfs-tools/mksquashfs.c	2021-04-15 17:47:58.384842087 +0800
+@@ -49,6 +49,7 @@
+ #include <regex.h>
+ #include <fnmatch.h>
+ #include <sys/wait.h>
++#include <sys/sysmacros.h>
+ 
+ #ifndef linux
+ #define __BYTE_ORDER BYTE_ORDER
+diff -Naur a/squashfs-tools/unsquashfs.c b/squashfs-tools/unsquashfs.c
+--- a/squashfs-tools/unsquashfs.c	2021-04-15 17:47:01.340246387 +0800
++++ b/squashfs-tools/unsquashfs.c	2021-04-15 17:48:17.037038810 +0800
+@@ -29,6 +29,7 @@
+ #include "compressor.h"
+ #include "xattr.h"
+ 
++#include <sys/sysmacros.h>
+ #include <sys/types.h>
+ 
+ struct cache *fragment_cache, *data_cache;

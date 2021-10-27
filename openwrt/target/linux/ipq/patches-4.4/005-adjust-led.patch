@@ -1,0 +1,53 @@
+diff -Naur a/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk14.dts b/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk14.dts
+--- a/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk14.dts	2021-05-27 10:25:43.491678567 +0800
++++ b/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk14.dts	2021-05-27 10:31:36.702885227 +0800
+@@ -314,26 +314,6 @@
+ 			bias-pull-down;
+ 		};
+ 
+-		led_ring0 {
+-			pins = "gpio63";
+-			function = "gpio";
+-			drive-strength = <8>;
+-			bias-pull-down;
+-		};
+-
+-		led_ring1 {
+-			pins = "gpio64";
+-			function = "gpio";
+-			drive-strength = <8>;
+-			bias-pull-down;
+-		};
+-
+-		led_ring2 {
+-			pins = "gpio66";
+-			function = "gpio";
+-			drive-strength = <8>;
+-			bias-pull-down;
+-		};
+ 	};
+ 
+ 	pcie0_pins: pcie_pins {
+@@ -816,22 +796,6 @@
+ 			gpio = <&tlmm 50 GPIO_ACTIVE_HIGH>;
+ 			default-state = "off";
+ 		};
+-		led_ring0{
+-			label = "led_ring0";
+-			gpio = <&tlmm 63 GPIO_ACTIVE_HIGH>;
+-			default-state = "off";
+-		};
+-
+-		led_ring1 {
+-			label = "led_ring1";
+-			gpio = <&tlmm 64 GPIO_ACTIVE_HIGH>;
+-			default-state = "off";
+-		};
+-		led_ring2 {
+-			label = "led_ring2";
+-			gpio = <&tlmm 66 GPIO_ACTIVE_HIGH>;
+-			default-state = "off";
+-		};
+ 	};
+ 
+ 	qcom,test@0 {

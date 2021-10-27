@@ -1,0 +1,47 @@
+--- a/ap.c
++++ b/ap.c
+@@ -9118,6 +9118,15 @@ skip_key_mgmt:
+ 	}
+ 
+ 	if(drv == DRIVER_MAC80211 && dut->program == PROGRAM_HE) {
++		int pdev_id;
++
++		if (strcmp(ifname, "wlan0") == 0) {
++			pdev_id = 1;
++		} else if (strcmp(ifname, "wlan1") == 0) {
++			pdev_id = 2;
++		} else {
++			pdev_id = 3;
++		}
+ 
+ 		/* disable MU BAR */
+ 		run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 64 1",
+@@ -9166,6 +9175,18 @@ skip_key_mgmt:
+ 			/* disable enable_ul_ofdma_efficiency_check */
+ 			run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 131 0",
+ 					   ifname);
++
++			/* he_dynamic_muedca 0 */
++			run_system_wrapper(dut, "ath11k-fwtest -t 2 -i %s -m 0x00 -p %d 0xBF 0x00", ifname, pdev_id);
++
++			/* Trigger Interval */
++			run_system_wrapper(dut, "ath11k-fwtest -t 2 -i %s -m 0x00 -p %d 0xA2 0x02", ifname, pdev_id);
++			/* he_mu_edca 1 */
++			run_system_wrapper(dut, "ath11k-fwtest -t 1 -i %s -m 0x00 -v 0 0x8F 0x01", ifname);
++			/* he ul ltf */
++			run_system_wrapper(dut, "ath11k-fwtest -t 1 -i %s -m 0x00 -v 0 0x8D 0x03", ifname);
++			/*he ul gi */
++			run_system_wrapper(dut, "ath11k-fwtest -t 1 -i %s -m 0x00 -v 0 0x89 0x03", ifname);
+ 		}
+ 
+ 		if (dut->ap_he_ppdu == PPDU_MU &&
+@@ -13917,6 +13938,9 @@ static void mac80211_set_trigger_type_3(
+ 
+ static void mac80211_set_trigger_type_4(struct sigma_dut *dut, const char *ifname)
+ {
++	/* Trigger interval */
++	run_system_wrapper(dut, "ath11k-fwtest -t 2 -i %s -m 0x00 -p 1 0xA2 0xC8", ifname);
++
+ 	/* TriggerType "4" for BSRP */
+ 	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x48 -v 0 63 1000",
+ 			   ifname);

@@ -1,0 +1,80 @@
+From a23c193cda2fbdfbcb6027fec06318bb7721f896 Mon Sep 17 00:00:00 2001
+From: Aloka Dixit <alokad@codeaurora.org>
+Date: Mon, 14 Dec 2020 10:57:55 -0800
+Subject: [PATCH 8/9] hostapd: Update 2.4/5GHz beacons during 6GHz beacon setup
+
+Update 2.4/5GHz beacons every time beacons for co-located 6GHz AP(s)
+are set.
+
+This is required for 6GHz out-of-band discovery so that lower band beacons
+will include RNR element with 6GHz AP information irrespective of the AP
+bring-up order.
+
+Additionally, changes in 6GHz AP configuration such as new channel/bandwidth
+also get reflected in the lower bands beacons.
+
+Signed-off-by: Aloka Dixit <alokad@codeaurora.org>
+---
+ src/ap/beacon.c | 33 ++++++++++++++++++++++++++++++++-
+ 1 file changed, 32 insertions(+), 1 deletion(-)
+
+diff --git a/src/ap/beacon.c b/src/ap/beacon.c
+index 37ac54514eda..31f083afdad5 100644
+--- a/src/ap/beacon.c
++++ b/src/ap/beacon.c
+@@ -1888,7 +1888,7 @@ void ieee802_11_free_ap_params(struct wpa_driver_ap_params *params)
+ }
+ 
+ 
+-int ieee802_11_set_beacon(struct hostapd_data *hapd)
++static int hostapd_set_beacon(struct hostapd_data *hapd)
+ {
+ 	struct wpa_driver_ap_params params;
+ 	struct hostapd_freq_params freq;
+@@ -1963,12 +1963,43 @@ int ieee802_11_set_beacon(struct hostapd_data *hapd)
+ 		wpa_printf(MSG_ERROR, "Failed to set beacon parameters");
+ 	else
+ 		ret = 0;
++
+ fail:
+ 	ieee802_11_free_ap_params(&params);
+ 	return ret;
+ }
+ 
+ 
++int ieee802_11_set_beacon(struct hostapd_data *hapd)
++{
++	struct hostapd_iface *iface = hapd->iface, *colocated = NULL;
++	int ret = 0;
++	size_t i, j;
++
++	ret = hostapd_set_beacon(hapd);
++	if (ret != 0)
++		return ret;
++
++	if ((is_6ghz_op_class(iface->conf->op_class) == 0) ||
++	    (iface->interfaces == NULL) || (iface->interfaces->count <= 1))
++		return 0;
++
++	/* Update 2.4/5GHz beacons if 6GHz AP is co-located */
++	for (j = 0; j < iface->interfaces->count; j++) {
++		colocated = iface->interfaces->iface[j];
++		if (is_6ghz_op_class(colocated->conf->op_class))
++			continue;
++
++		for (i = 0; i < colocated->num_bss; i++) {
++			if (colocated->bss[i]->started)
++				hostapd_set_beacon(colocated->bss[i]);
++		}
++	}
++
++	return 0;
++}
++
++
+ int ieee802_11_set_beacons(struct hostapd_iface *iface)
+ {
+ 	size_t i;
+-- 
+2.25.0
+

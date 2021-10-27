@@ -1,0 +1,47 @@
+Index: rpcd-2021-01-06-ea7f4717/iwinfo.c
+===================================================================
+--- rpcd-2021-01-06-ea7f4717.orig/iwinfo.c
++++ rpcd-2021-01-06-ea7f4717/iwinfo.c
+@@ -491,6 +491,7 @@ rpc_iwinfo_add_rateinfo(struct iwinfo_ra
+ {
+ 	blobmsg_add_u8(&buf, "ht", r->is_ht);
+ 	blobmsg_add_u8(&buf, "vht", r->is_vht);
++	blobmsg_add_u8(&buf, "he", r->is_he);
+ 	blobmsg_add_u32(&buf, "mhz", r->mhz);
+ 	blobmsg_add_u32(&buf, "rate", r->rate);
+ 
+
+Index: rpcd-2021-01-06-ea7f4717/iwinfo.c
+===================================================================
+--- rpcd-2021-01-06-ea7f4717.orig/iwinfo.c
++++ rpcd-2021-01-06-ea7f4717/iwinfo.c
+@@ -500,11 +500,12 @@ rpc_iwinfo_add_rateinfo(struct iwinfo_ra
+		blobmsg_add_u8(&buf, "40mhz", r->is_40mhz);
+		blobmsg_add_u8(&buf, "short_gi", r->is_short_gi);
+	}
+-	else if (r->is_vht) {
++	else if (r->is_vht | r->is_he) {
+		blobmsg_add_u32(&buf, "mcs", r->mcs);
+		blobmsg_add_u32(&buf, "nss", r->nss);
+		blobmsg_add_u8(&buf, "short_gi", r->is_short_gi);
+	}
++
+ }
+
+ static int
+Index: rpcd-2021-01-06-ea7f4717/iwinfo.c
+===================================================================
+--- rpcd-2021-01-06-ea7f4717.orig/iwinfo.c
++++ rpcd-2021-01-06-ea7f4717/iwinfo.c
+@@ -504,6 +504,11 @@ rpc_iwinfo_add_rateinfo(struct iwinfo_ra
+		blobmsg_add_u32(&buf, "mcs", r->mcs);
+		blobmsg_add_u32(&buf, "nss", r->nss);
+		blobmsg_add_u8(&buf, "short_gi", r->is_short_gi);
++		if (r->is_he) {
++			if (r->is_ru_alloc)
++				blobmsg_add_u32(&buf, "ru_alloc", r->he_ru_alloc);
++			blobmsg_add_u8(&buf, "dcm", r->he_dcm);
++		}
+	}
+
+ }

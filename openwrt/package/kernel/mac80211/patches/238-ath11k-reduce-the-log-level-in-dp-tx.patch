@@ -1,0 +1,38 @@
+From b2b6684fef31f88116635906a17291960f246292 Mon Sep 17 00:00:00 2001
+From: Anilkumar Kolli <akolli@codeaurora.org>
+Date: Mon, 1 Feb 2021 16:22:05 +0530
+Subject: [PATCH] ath11k: reduce the log level in dp tx
+
+In multiclient stress test case with UDP DL traffic and
+frequent STA disconnects, ath11k has pending tx completions
+for the deleted peer. Below warning messages floods the console.
+
+ath11k_warn: 642 callbacks suppressed
+ath11k_pci 0000:01:00.0: failed to find the peer with peer_id 88
+
+Reduce the log level to avoid lot of messages console.
+
+Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath11k/dp_tx.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath11k/dp_tx.c b/drivers/net/wireless/ath/ath11k/dp_tx.c
+index 83b96bfcce33..f13503136dc2 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_tx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_tx.c
+@@ -586,8 +586,9 @@ static void ath11k_dp_tx_complete_msdu(struct ath11k *ar,
+ 	spin_lock_bh(&ab->base_lock);
+ 	peer = ath11k_peer_find_by_id(ab, ts->peer_id);
+ 	if (!peer || !peer->sta) {
+-		ath11k_warn(ab, "failed to find the peer with peer_id %d\n",
+-			    ts->peer_id);
++		ath11k_dbg(ab, ATH11K_DBG_DATA,
++			   "dp_tx: failed to find the peer with peer_id %d\n",
++			   ts->peer_id);
+ 		spin_unlock_bh(&ab->base_lock);
+ 		dev_kfree_skb_any(msdu);
+ 		goto exit;
+-- 
+2.7.4
+

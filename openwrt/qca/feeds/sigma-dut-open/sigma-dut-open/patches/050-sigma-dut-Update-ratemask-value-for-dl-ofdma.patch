@@ -1,0 +1,48 @@
+From 8a130a8dcd3f6cbe7d8f05601379898193e34818 Mon Sep 17 00:00:00 2001
+From: Lavanya Suresh <lavaks@codeaurora.org>
+Date: Tue, 22 Dec 2020 14:52:14 +0530
+Subject: [PATCH] sigma-dut: Update ratemask value for dl ofdma
+
+Ratemask is updated to set mcs range 7 to 11 for dl ofdma
+testcases, to remove ssid checks.
+
+Signed-off-by: Lavanya Suresh <lavaks@codeaurora.org>
+---
+ ap.c | 13 +++----------
+ 1 file changed, 3 insertions(+), 10 deletions(-)
+
+diff --git a/ap.c b/ap.c
+index 78c693b..dc35680 100644
+--- a/ap.c
++++ b/ap.c
+@@ -9452,7 +9452,7 @@ skip_key_mgmt:
+ 
+ 		mac_id = mac80211_get_mac_id(ifname);
+ 		if (mac_id >= 0) {
+-			snprintf(buf, sizeof(buf), "echo 0 0 0 0 > /sys/kernel/debug/ath11k/ipq8074/mac%d/rate_mask",
++			snprintf(buf, sizeof(buf), "echo 0 0 0 0 > /sys/kernel/debug/ieee80211/phy%d/ath11k/rate_mask",
+ 				 mac_id);
+ 			if (system(buf) != 0)
+ 				sigma_dut_print(dut, DUT_MSG_INFO, "Failed to run '%s'", buf);
+@@ -9460,16 +9460,9 @@ skip_key_mgmt:
+ 			sigma_dut_print(dut, DUT_MSG_INFO, "Failed to set rate_mask");
+ 		}
+ 
+-		if (strstr(dut->ap_ssid, "HE-4.37.1") != NULL) {
++		if (dut->ap_he_dlofdma == VALUE_ENABLED) {
+ 			snprintf(buf, sizeof(buf),
+-				 "echo 3 0x00C00C00 0x0C00C00C 0xC00C00C0 > /sys/kernel/debug/ath11k/ipq8074/mac%d/rate_mask", mac_id);
+-			if (system(buf) != 0)
+-				sigma_dut_print(dut, DUT_MSG_INFO, "Failed to run '%s'", buf);
+-		}
+-
+-		if (strstr(dut->ap_ssid, "HE-4.36.1")) {
+-			snprintf(buf, sizeof(buf),
+-				 "echo 3 0x00F00F00 0x0F00F00F 0xF00F00F0 > /sys/kernel/debug/ath11k/ipq8074/mac%d/rate_mask", mac_id);
++				 "echo 3 0x80f80f80 0x0f80f80f 0xf80f80f8 > /sys/kernel/debug/ieee80211/phy%d/ath11k/rate_mask", mac_id);
+ 			if (system(buf) != 0)
+ 				sigma_dut_print(dut, DUT_MSG_INFO, "Failed to run '%s'", buf);
+ 		}
+-- 
+2.7.4
+

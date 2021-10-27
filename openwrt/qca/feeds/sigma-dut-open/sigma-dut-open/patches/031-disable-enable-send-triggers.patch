@@ -1,0 +1,31 @@
+--- a/ap.c
++++ b/ap.c
+@@ -8963,6 +8963,9 @@ skip_key_mgmt:
+ 			pdev_id = 3;
+ 		}
+ 
++		/* disbale sending basic triggers */
++		run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 42 0",
++				   ifname);
+ 		/* disable MU BAR */
+ 		run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 64 1",
+ 			           ifname);
+@@ -13801,6 +13804,8 @@ static void mac80211_set_assoc_disallow(
+ static void mac80211_set_trigger_type_0(struct sigma_dut *dut, const char *ifname)
+ {
+ 	/* TriggerType "0" for Basic trigger */
++	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 42 7",
++			   ifname);
+ 	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 43 6",
+ 			   ifname);
+ }
+@@ -13862,6 +13867,9 @@ static void mac80211_set_trigger_type_4(
+ 	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x48 -v 0 63 1000",
+ 			   ifname);
+ 
++	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 42 7",
++			   ifname);
++
+ 	/* Send BSRP command */
+ 	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 43 7",
+ 			   ifname);

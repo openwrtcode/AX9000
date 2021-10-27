@@ -1,0 +1,211 @@
+From 05d9bff2eb8b057d34c7c4b24329dd92cf4faddb Mon Sep 17 00:00:00 2001
+From: Sathishkumar Muruganandam <murugana@codeaurora.org>
+Date: Wed, 18 Nov 2020 23:54:38 +0530
+Subject: [PATCH 1/3] mac80211: add AP_VLAN iftype support on NSS offload case
+
+- allow AP_VLAN iftype to get added, removed
+- add new callback for 4addr rx_notify to get AP_VLAN created from hostapd
+- modify sta_use_4addr drv callback to advertise AP_VLAN vif instead of AP vif
+- modify drv_tx callback to use AP_VLAN vif on NSS offload case
+
+Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
+---
+ include/net/mac80211.h    | 11 +++++++++++
+ net/mac80211/cfg.c        |  5 ++++-
+ net/mac80211/driver-ops.c |  9 +++++----
+ net/mac80211/iface.c      | 10 ++++++----
+ net/mac80211/rx.c         |  6 ++++++
+ net/mac80211/tx.c         | 14 ++++++++++----
+ net/mac80211/util.c       |  6 ++----
+ 7 files changed, 44 insertions(+), 17 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 636f577e1340..47732c4f7f01 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -4634,6 +4634,17 @@ void ieee80211_sta_pspoll(struct ieee80211_sta *sta);
+  */
+ void ieee80211_sta_uapsd_trigger(struct ieee80211_sta *sta, u8 tid);
+ 
++/**
++ * ieee80211_rx_nss_notify_4addr - notify userspace about 4addr frame rx
++ * @dev: The device the frame matched to
++ * @addr: the transmitter address of 4addr sta
++ *
++ * When operating in AP mode with NSS offload enabled, this function is used
++ * to invoke cfg80211 callback to notify userspace that an associated station
++ * sent a 4addr frame.
++ */
++void ieee80211_rx_nss_notify_4addr(struct net_device *dev, u8* sta_addr);
++
+ /*
+  * The TX headroom reserved by mac80211 for its own tx_status functions.
+  * This is enough for the radiotap header.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 532d069005c4..d1a921e4605b 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1938,7 +1938,10 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+ 			rcu_assign_pointer(vlansdata->u.vlan.sta, sta);
+ 			__ieee80211_check_fast_rx_iface(vlansdata);
+ 
+-			drv_sta_use_4addr(local, sdata, sta);
++			if (ieee80211_hw_check(&local->hw, SUPPORTS_NSS_OFFLOAD))
++				drv_sta_use_4addr(local, vlansdata, sta);
++			else
++				drv_sta_use_4addr(local, sdata, sta);
+ 		}
+ 
+ 		if (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
+diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
+index d8a754b0c6ef..452f3730d1cb 100644
+--- a/net/mac80211/driver-ops.c
++++ b/net/mac80211/driver-ops.c
+@@ -56,10 +56,9 @@ int drv_add_interface(struct ieee80211_local *local,
+ 
+ 	might_sleep();
+ 
+-	if (WARN_ON(sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
+-		    (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
++	if (WARN_ON(sdata->vif.type == NL80211_IFTYPE_MONITOR &&
+ 		     !ieee80211_hw_check(&local->hw, WANT_MONITOR_VIF) &&
+-		     !(sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE))))
++		     !(sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE)))
+ 		return -EINVAL;
+ 
+ 	trace_drv_add_interface(local, sdata);
+@@ -139,7 +138,9 @@ void drv_sta_use_4addr(struct ieee80211_local *local,
+ 		       struct ieee80211_sub_if_data *sdata,
+ 		       struct sta_info *sta)
+ {
+-	sdata = get_bss_sdata(sdata);
++	if (!ieee80211_hw_check(&local->hw, SUPPORTS_NSS_OFFLOAD))
++		sdata = get_bss_sdata(sdata);
++
+ 	if (!check_sdata_in_driver(sdata))
+ 		return;
+ 
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 6b0388542147..7e92972ef544 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -613,13 +613,18 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_AP_VLAN:
+-		/* no need to tell driver, but set carrier and chanctx */
+ 		if (rtnl_dereference(sdata->bss->beacon)) {
+ 			ieee80211_vif_vlan_copy_chanctx(sdata);
+ 			netif_carrier_on(dev);
+ 		} else {
+ 			netif_carrier_off(dev);
+ 		}
++
++		if (ieee80211_hw_check(&local->hw, SUPPORTS_NSS_OFFLOAD)) {
++			res = drv_add_interface(local, sdata);
++			if (res)
++				goto err_del_interface;
++		}
+ 		break;
+ 	case NL80211_IFTYPE_MONITOR:
+ 		if (sdata->u.mntr.flags & MONITOR_FLAG_COOK_FRAMES) {
+@@ -1084,8 +1089,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	switch (sdata->vif.type) {
+-	case NL80211_IFTYPE_AP_VLAN:
+-		break;
+ 	case NL80211_IFTYPE_MONITOR:
+ 		if (local->monitors == 0)
+ 			ieee80211_del_virtual_monitor(local);
+@@ -1957,7 +1960,6 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 		int txq_size = 0;
+ 
+ 		if (local->ops->wake_tx_queue &&
+-		    type != NL80211_IFTYPE_AP_VLAN &&
+ 		    (type != NL80211_IFTYPE_MONITOR ||
+ 		     (params->flags & MONITOR_FLAG_ACTIVE)))
+ 			txq_size += sizeof(struct txq_info) +
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index f9deb9a71fec..8715ed3af9e3 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1718,6 +1718,12 @@ void ieee80211_sta_uapsd_trigger(struct ieee80211_sta *pubsta, u8 tid)
+ }
+ EXPORT_SYMBOL(ieee80211_sta_uapsd_trigger);
+ 
++void ieee80211_rx_nss_notify_4addr(struct net_device *dev, u8 *sta_addr)
++{
++	cfg80211_rx_unexpected_4addr_frame(dev, sta_addr, GFP_ATOMIC);
++}
++EXPORT_SYMBOL(ieee80211_rx_nss_notify_4addr);
++
+ static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_uapsd_and_pspoll(struct ieee80211_rx_data *rx)
+ {
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 276b50190e7d..89fe8d5bb645 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -3960,8 +3960,13 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 		sta = NULL;
+ 
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
+-		ap_sdata = container_of(sdata->bss,
+-					struct ieee80211_sub_if_data, u.ap);
++		if (!ieee80211_hw_check(&local->hw, SUPPORTS_NSS_OFFLOAD))
++			ap_sdata = container_of(sdata->bss,
++						struct ieee80211_sub_if_data,
++						u.ap);
++		else
++			ap_sdata = sdata;
++
+ 		if (ap_sdata->hw_80211_encap && !is_multicast_ether_addr(skb->data)) {
+ 			ieee80211_8023_xmit(sdata, dev, sta, skb);
+ 			rcu_read_unlock();
+@@ -4269,7 +4274,7 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
+ 	if (sta)
+ 		authorized = test_sta_flag(sta, WLAN_STA_AUTHORIZED);
+ 
+-	if (!multicast && !authorized &&
++	if (!multicast && sta && !authorized &&
+ 	    (ehdr->h_proto != sdata->control_port_protocol ||
+ 	     !ether_addr_equal(sdata->vif.addr, ehdr->h_source)))
+ 		goto out_free;
+@@ -4307,7 +4312,8 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
+ 		sta->tx_stats.packets[skb_get_queue_mapping(skb)]++;
+ 	}
+ 
+-	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
++		!ieee80211_hw_check(&local->hw, SUPPORTS_NSS_OFFLOAD))
+ 		sdata = container_of(sdata->bss,
+ 				     struct ieee80211_sub_if_data, u.ap);
+ 
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index d5d600cbacc8..c6f9913288b4 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2284,8 +2284,7 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	}
+ 
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+-		if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
+-		    sdata->vif.type != NL80211_IFTYPE_MONITOR &&
++		if (sdata->vif.type != NL80211_IFTYPE_MONITOR &&
+ 		    ieee80211_sdata_running(sdata)) {
+ 			res = drv_add_interface(local, sdata);
+ 			if (WARN_ON(res))
+@@ -2299,8 +2298,7 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	if (res) {
+ 		list_for_each_entry_continue_reverse(sdata, &local->interfaces,
+ 						     list)
+-			if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
+-			    sdata->vif.type != NL80211_IFTYPE_MONITOR &&
++			if (sdata->vif.type != NL80211_IFTYPE_MONITOR &&
+ 			    ieee80211_sdata_running(sdata))
+ 				drv_remove_interface(local, sdata);
+ 		ieee80211_handle_reconfig_failure(local);
+-- 
+2.7.4
+

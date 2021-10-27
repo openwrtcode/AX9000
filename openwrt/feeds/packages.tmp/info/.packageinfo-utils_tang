@@ -1,0 +1,25 @@
+Source-Makefile: feeds/packages/utils/tang/Makefile
+Build-Depends: meson/host ninja/host
+Build-Depends/host: ninja/host
+
+Package: tang
+Version: 8-1
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread +libhttp-parser +xinetd +jose +bash
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: utils
+Category: Extra packages
+Repository: base
+Title: tang v8 - daemon for binding data to the presence of a third party
+Maintainer: Tibor Dudlák <tibor.dudlak@gmail.com>
+Source: tang-8.tar.xz
+License: GPL-3.0-or-later
+LicenseFiles: COPYING
+Type: ipkg
+Description: 	Tang is a small daemon for binding data to the presence of a third party.
+https://github.com/latchset/tang
+Tibor Dudlák <tibor.dudlak@gmail.com>
+@@
+
+

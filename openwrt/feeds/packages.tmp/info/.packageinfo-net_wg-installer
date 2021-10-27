@@ -1,0 +1,22 @@
+Source-Makefile: feeds/packages/net/wg-installer/Makefile
+
+Package: wg-installer-server
+Menu: 1
+Version: 
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread +rpcd +uhttpd +uhttpd-mod-ubus +owipcalc
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: WireGuard Installer (server)
+Maintainer: Nick Hainke <vincent@systemli.org>
+Source: 
+Type: ipkg
+Description: WireGuard Installer (server)
+https://github.com/Freifunk-Spalter/
+Nick Hainke <vincent@systemli.org>
+@@
+
+

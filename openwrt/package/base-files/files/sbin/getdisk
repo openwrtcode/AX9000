@@ -1,0 +1,176 @@
+#!/bin/sh
+
+# copyright            : (C) by 2021 Lin kai 
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as         
+# published by the Free Software Foundation                                
+# You may obtain a copy of the License at                                   
+# https://opensource.org/licenses/gpl-2.0.php 
+
+is_sysdisk(){
+	[ -f /tmp/sysdisk ] || return 1
+	grep -q $1 /tmp/sysdisk
+	return $?
+}
+
+
+sys_shared() {
+	ind=`cat /proc/mounts | grep sd | awk '{print $1","$2}'`
+
+	for i in $ind
+	do
+		dev=`echo $i | cut -d "," -f 1`
+		is_sysdisk $dev || lst="$lst $i"
+	done
+
+	#xargs will remove the leading space
+	echo "$lst" | xargs
+}
+
+#probe if system disk or partition
+# 1=Not system partition 0=System partition
+probe_sysdisk() {
+	is_sysdisk $1
+	echo $?
+}
+
+probe_fs() {
+	[ -b $1 ] && {
+		type=`blkid -s TYPE $1 | cut -d "\"" -f2`
+		[ -z $type ] || echo $type
+	}
+}
+
+
+#$1 = base device, e,g, /dev/sda
+probe_gpt() {
+	flag=`dd bs=1 count=1 skip=450 if=$1 2>/dev/null | hexdump  -e '16/1 "%02x" "\n"'`
+	if [ $flag = "ee" ]; then
+		echo "GPT"
+	else
+		echo "MBR"
+	fi
+}
+
+
+#$1 = base device, e,g, /dev/sda
+#$2 = part id
+probe_guid() {
+	let i=128*$2+896
+	dd bs=1 count=16 skip=$i if=$1 2>/dev/null | hexdump -e '16/1 "%02x" "\n"'
+}
+
+
+probe_bus() {
+	local blockdev=`basename $1`
+	local basedev=${blockdev%%[1-9]*}
+	[ -L "/sys/block/$basedev/device" ] || return 0
+
+	if [ `which readlink` ]; then
+		local sysfsdev=`readlink -f /sys/block/$basedev/device`
+		echo $sysfsdev | grep -q "usb" && echo "USB" && return
+		scsiaddr=`basename $sysfsdev`
+		cat /sys/class/scsi_host/host${scsiaddr%%:*}/proc_name | grep -qE "ahci|sata" && echo "SATA" && return
+	else
+		ls -l /sys/block/$basedev/device | grep -q "usb" && echo "USB" && return
+		echo "SATA" && return
+	fi
+}
+
+# Get usb storage device info based on block device node
+# $1 = device node. e,g, /dev/sda, /dev/sdb1, etc
+
+#tmp disable new interface.
+probe_usbinfo_udev() {
+	#xiaomi patent for mapping a mtp device as a block device
+	if [ "$1" = "/dev/sdz9" ]; then
+		[ -f /tmp/sdz9.txt ] && cat /tmp/sdz9.txt
+		exit 0
+	fi
+
+	if [ -x /usr/sbin/udev_blk ]; then
+		/usr/sbin/udev_blk usb "$1"
+		return $?
+	else
+		return -1
+	fi
+
+}
+
+probe_usbinfo_legacy() {
+	local device=`echo $1 | cut -b 6-8`
+	local sysdev
+	local usbpath
+	local class
+	local vendor
+	local product
+	local usbinfo
+	local base
+
+	if [ "$1" = "/dev/sdz9" ]; then
+		[ -f /tmp/sdz9.txt ] && cat /tmp/sdz9.txt
+		exit 0
+	fi
+
+	#No such device
+	[ -f /sys/block/$device/uevent ] || exit 1
+
+	#Not USB device
+	sysdev=`cat /sys/block/$device/uevent | grep PHYSDEVPATH | cut -d "=" -f 2`
+	echo $sysdev | grep -q "usb" || exit 1
+
+	#proble at most 10 level,skip any hub device at middle
+	base=6
+	while [ "$base" -le "10" ]
+	do
+		usbpath=`echo $sysdev | cut -d "/" -f 1-$base`
+		#Reached the end
+		[ -d "/sys/$usbpath" ] || exit 1
+		class=`cat /sys/$usbpath/bDeviceClass`
+		[ "$class" = "09" ] || break
+		let "base+=1"
+	done
+
+	vendor=`cat /sys/$usbpath/idVendor`
+	product=`cat /sys/$usbpath/idProduct`
+	#echo $vendor $product
+	usbinfo=`lsusb -d $vendor:$product -v 2&> /dev/null | grep iManufacturer -A 2`
+
+	echo "$usbinfo" | while read line
+	do
+		echo $line | awk '{print $3" "$4" "$5" "$6" "$7}'
+	done
+}
+
+
+case $1 in
+	"mnt")
+		sys_shared
+		;;
+	"sysdisk")
+		[ -z "$2" ] && exit 0
+		probe_sysdisk $2
+		;;
+	"fs")
+		[ -z "$2" ] && exit 0
+		probe_fs $2
+		;;
+	"guid")
+		[ -z "$2" ] && exit 0
+		probe_guid $2 $3
+		;;
+	"gpt")
+		[ -z "$2" ] && exit 0
+		probe_gpt $2
+		;;
+	"bus")
+		[ -z "$2" ] && exit 0
+		probe_bus $2
+		;;
+	"usbinfo")
+		[ -z "$2" ] && exit 0
+		probe_usbinfo $2
+		;;
+	*)
+		;;
+esac

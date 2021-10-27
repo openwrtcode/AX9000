@@ -1,0 +1,47 @@
+Source-Makefile: feeds/packages/net/miniupnpd/Makefile
+
+Package: miniupnpd
+Submenu: Firewall
+Version: 2.2.1-2
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread +iptables +libip4tc +IPV6:libip6tc +IPV6:ip6tables +libuuid +libcap-ng
+Conflicts: miniupnpd-igdv1
+Menu-Depends: 
+Provides: 
+Build-Variant: igdv2
+Section: net
+Category: Network
+Repository: base
+Title: Lightweight UPnP IGD, NAT-PMP & PCP daemon (IGDv2)
+Maintainer: 
+Source: miniupnpd-2.2.1.tar.gz
+License: BSD-3-Clause
+LicenseFiles: LICENSE
+Type: ipkg
+Description: Lightweight UPnP IGD, NAT-PMP & PCP daemon (IGDv2)
+https://miniupnp.tuxfamily.org/
+
+@@
+
+Package: miniupnpd-igdv1
+Submenu: Firewall
+Version: 2.2.1-2
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread +iptables +libip4tc +IPV6:libip6tc +IPV6:ip6tables +libuuid +libcap-ng
+Conflicts: 
+Menu-Depends: 
+Provides: miniupnpd
+Build-Variant: igdv1
+Section: net
+Category: Network
+Repository: base
+Title: Lightweight UPnP IGD, NAT-PMP & PCP daemon (IGDv1)
+Maintainer: 
+Source: miniupnpd-2.2.1.tar.gz
+License: BSD-3-Clause
+LicenseFiles: LICENSE
+Type: ipkg
+Description: Lightweight UPnP IGD, NAT-PMP & PCP daemon (IGDv1)
+https://miniupnp.tuxfamily.org/
+
+@@
+
+

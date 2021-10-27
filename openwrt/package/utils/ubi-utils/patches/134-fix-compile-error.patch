@@ -1,0 +1,11 @@
+diff -Naur a/mkfs.jffs2.c b/mkfs.jffs2.c
+--- a/mkfs.jffs2.c	2021-05-07 20:09:19.816385472 +0800
++++ b/mkfs.jffs2.c	2021-05-07 20:10:12.417626641 +0800
+@@ -65,6 +65,7 @@
+ #include <ctype.h>
+ #include <time.h>
+ #include <getopt.h>
++#include <sys/sysmacros.h>
+ #ifndef WITHOUT_XATTR
+ #include <sys/xattr.h>
+ #include <sys/acl.h>

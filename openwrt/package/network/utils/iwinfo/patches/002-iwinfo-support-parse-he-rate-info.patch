@@ -1,0 +1,88 @@
+Index: libiwinfo-2021-01-06-23d2722b/api/nl80211.h
+===================================================================
+--- libiwinfo-2021-01-06-23d2722b.orig/api/nl80211.h
++++ libiwinfo-2021-01-06-23d2722b/api/nl80211.h
+@@ -2369,6 +2369,11 @@ enum nl80211_rate_info {
+ 	NL80211_RATE_INFO_160_MHZ_WIDTH,
+ 	NL80211_RATE_INFO_10_MHZ_WIDTH,
+ 	NL80211_RATE_INFO_5_MHZ_WIDTH,
++	NL80211_RATE_INFO_HE_MCS,
++	NL80211_RATE_INFO_HE_NSS,
++	NL80211_RATE_INFO_HE_GI,
++	NL80211_RATE_INFO_HE_DCM,
++	NL80211_RATE_INFO_HE_RU_ALLOC,
+ 
+ 	/* keep last */
+ 	__NL80211_RATE_INFO_AFTER_LAST,
+Index: libiwinfo-2021-01-06-23d2722b/include/iwinfo.h
+===================================================================
+--- libiwinfo-2021-01-06-23d2722b.orig/include/iwinfo.h
++++ libiwinfo-2021-01-06-23d2722b/include/iwinfo.h
+@@ -111,6 +111,7 @@ struct iwinfo_rate_entry {
+ 	uint8_t is_short_gi:1;
+ 	uint8_t is_ht:1;
+ 	uint8_t is_vht:1;
++	uint8_t is_he:1;
+ 	uint8_t mhz;
+ 	uint8_t nss;
+ };
+Index: libiwinfo-2021-01-06-23d2722b/iwinfo_nl80211.c
+===================================================================
+--- libiwinfo-2021-01-06-23d2722b.orig/iwinfo_nl80211.c
++++ libiwinfo-2021-01-06-23d2722b/iwinfo_nl80211.c
+@@ -1882,6 +1882,13 @@ static void nl80211_parse_rateinfo(struc
+ 		re->is_ht = 1;
+ 		re->mcs = nla_get_u8(ri[NL80211_RATE_INFO_MCS]);
+ 	}
++	else if (ri[NL80211_RATE_INFO_HE_MCS]) 
++	{
++		re->is_he = 1;
++		re->mcs = nla_get_u8(ri[NL80211_RATE_INFO_HE_MCS]);
++		if (ri[NL80211_RATE_INFO_HE_NSS])
++			re->nss = nla_get_u8(ri[NL80211_RATE_INFO_HE_NSS]);
++	}
+ 
+ 	if (ri[NL80211_RATE_INFO_5_MHZ_WIDTH])
+ 		re->mhz = 5;
+@@ -1897,7 +1904,7 @@ static void nl80211_parse_rateinfo(struc
+ 	else
+ 		re->mhz = 20;
+ 
+-	if (ri[NL80211_RATE_INFO_SHORT_GI])
++	if (ri[NL80211_RATE_INFO_SHORT_GI] || ri[NL80211_RATE_INFO_HE_GI])
+ 		re->is_short_gi = 1;
+ 
+ 	re->is_40mhz = (re->mhz == 40);
+Index: libiwinfo-2021-01-06-23d2722b/include/iwinfo.h
+===================================================================
+--- libiwinfo-2021-01-06-23d2722b.orig/include/iwinfo.h
++++ libiwinfo-2021-01-06-23d2722b/include/iwinfo.h
+@@ -112,8 +112,11 @@ struct iwinfo_rate_entry {
+	uint8_t is_ht:1;
+	uint8_t is_vht:1;
+	uint8_t is_he:1;
++	uint8_t is_ru_alloc:1;
+	uint8_t mhz;
+	uint8_t nss;
++	uint8_t he_dcm;
++	uint8_t he_ru_alloc;
+ };
+
+ struct iwinfo_assoclist_entry {
+Index: libiwinfo-2021-01-06-23d2722b/iwinfo_nl80211.c
+===================================================================
+--- libiwinfo-2021-01-06-23d2722b.orig/iwinfo_nl80211.c
++++ libiwinfo-2021-01-06-23d2722b/iwinfo_nl80211.c
+@@ -1888,6 +1888,12 @@ static void nl80211_parse_rateinfo(struc
+		re->mcs = nla_get_u8(ri[NL80211_RATE_INFO_HE_MCS]);
+		if (ri[NL80211_RATE_INFO_HE_NSS])
+			re->nss = nla_get_u8(ri[NL80211_RATE_INFO_HE_NSS]);
++		if (ri[NL80211_RATE_INFO_HE_DCM])
++			re->he_dcm = nla_get_u8(ri[NL80211_RATE_INFO_HE_DCM]);
++		if (ri[NL80211_RATE_INFO_HE_RU_ALLOC]) {
++			re->he_ru_alloc = nla_get_u8(ri[NL80211_RATE_INFO_HE_RU_ALLOC]);
++			re->is_ru_alloc = 1;
++		}
+	}
+
+	if (ri[NL80211_RATE_INFO_5_MHZ_WIDTH])

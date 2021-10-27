@@ -1,0 +1,24 @@
+Index: backports-20200902_001-4.4.60-931c337125/drivers/net/wireless/ath/ath10k/mac.c
+===================================================================
+--- backports-20200902_001-4.4.60-931c337125.orig/drivers/net/wireless/ath/ath10k/mac.c
++++ backports-20200902_001-4.4.60-931c337125/drivers/net/wireless/ath/ath10k/mac.c
+@@ -10064,6 +10064,7 @@ int ath10k_mac_register(struct ath10k *a
+ 
+ 	ar->hw->weight_multiplier = ATH10K_AIRTIME_WEIGHT_MULTIPLIER;
+ 
++	ieee80211_hw_set(ar->hw, NO_AUTO_VIF); //Don't add default STA interface
+ 	ret = ieee80211_register_hw(ar->hw);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to register ieee80211: %d\n", ret);
+Index: backports-20200902_001-4.4.60-931c337125/drivers/net/wireless/ath/ath11k/mac.c
+===================================================================
+--- backports-20200902_001-4.4.60-931c337125.orig/drivers/net/wireless/ath/ath11k/mac.c
++++ backports-20200902_001-4.4.60-931c337125/drivers/net/wireless/ath/ath11k/mac.c
+@@ -8696,6 +8696,7 @@ static int __ath11k_mac_register(struct
+ 	if (ab->nss.enabled)
+ 		ieee80211_hw_set(ar->hw, SUPPORTS_NSS_OFFLOAD);
+ 
++	ieee80211_hw_set(ar->hw, NO_AUTO_VIF); //Don't add default STA interface
+ 	ret = ieee80211_register_hw(ar->hw);
+ 	if (ret) {
+ 		ath11k_err(ar->ab, "ieee80211 registration failed: %d\n", ret);

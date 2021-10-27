@@ -1,0 +1,111 @@
+From 14df29b3f6ed9195bf4b565901e9239283027ffa Mon Sep 17 00:00:00 2001
+From: Venkateswara Naralasetty <vnaralas@codeaurora.org>
+Date: Tue, 10 Nov 2020 09:28:20 +0530
+Subject: [PATCH] sigma-dut-open: add nl80211 get wiphy command support
+
+This change is to add support to get wiphy capabilities
+throught NL80211_GET_WIPHY command from sigma_dut.
+
+Signed-off-by: Venkateswara Naralasetty <vnaralas@codeaurora.org>
+---
+ ap.c | 76 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 76 insertions(+)
+
+diff --git a/ap.c b/ap.c
+index 1677548..f678974 100644
+--- a/ap.c
++++ b/ap.c
+@@ -10069,7 +10069,71 @@ static void ath_reset_vht_defaults(struct sigma_dut *dut)
+ 	}
+ }
+ 
++#ifdef NL80211_SUPPORT
++static int antenna_mask_to_nss(unsigned int mask)
++{
++	int i;
++	int msb = 0;
++
++	for (i = 0; i < sizeof(mask) * 8; i++)
++		if ((mask >> i) & 1)
++			msb = i;
++
++	return msb + 1;
++}
++
++static int  wiphy_info_handler(struct nl_msg *msg, void *arg)
++{
++	struct nlattr *tb[NL80211_ATTR_MAX + 1];
++	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
++	struct sigma_dut *dut = arg;
++	unsigned int tx_antenna_mask;
++	int nss;
++
++	nla_parse(tb, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
++		  genlmsg_attrlen(gnlh, 0), NULL);
+ 
++	if (tb[NL80211_ATTR_WIPHY_ANTENNA_TX]) {
++		tx_antenna_mask = nla_get_u32(tb[NL80211_ATTR_WIPHY_ANTENNA_TX]);
++		nss = antenna_mask_to_nss(tx_antenna_mask);
++		dut->ap_tx_streams = nss;
++	}
++
++	return 0;
++}
++
++static int mac80211_get_wiphy(struct sigma_dut *dut)
++{
++	struct nl_msg *msg;
++	int ret = 0;
++	int ifindex;
++
++	ifindex = if_nametoindex(dut->main_ifname);
++	if (ifindex == 0) {
++		sigma_dut_print(dut, DUT_MSG_DEBUG,
++				"%s: Index for interface %s failed",
++				__func__, dut->main_ifname);
++		return INVALID_SEND_STATUS;
++	}
++
++	if (!(msg = nl80211_drv_msg(dut, dut->nl_ctx, ifindex, 0,
++				    NL80211_CMD_GET_WIPHY)) ||
++	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, ifindex)) {
++		sigma_dut_print(dut, DUT_MSG_DEBUG,
++				"%s: err in get wiphy cmd", __func__);
++		nlmsg_free(msg);
++		return ERROR_SEND_STATUS;
++	}
++
++	ret = send_and_recv_msgs(dut, dut->nl_ctx, msg, wiphy_info_handler, dut);
++	if (ret)
++		sigma_dut_print(dut, DUT_MSG_DEBUG,
++				"%s: err in send_and_recv_msgs, ret=%d",
++				__func__, ret);
++
++	return ret;
++}
++#endif /* NL80211_SUPPORT */
+ static enum sigma_cmd_result cmd_ap_reset_default(struct sigma_dut *dut,
+ 						  struct sigma_conn *conn,
+ 						  struct sigma_cmd *cmd)
+@@ -10452,6 +10516,18 @@ static enum sigma_cmd_result cmd_ap_reset_default(struct sigma_dut *dut,
+ 		dut->ap_assoc_delay = 0;
+ 	}
+ 
++#ifdef NL80211_SUPPORT
++	int ret;
++
++	if (get_driver_type(dut) == DRIVER_MAC80211) {
++		ret = mac80211_get_wiphy(dut);
++		if (ret) {
++			sigma_dut_print(dut, DUT_MSG_ERROR,
++					"failed to get wiphy data");
++			return ret;
++		}
++	}
++#endif /* NL80211_SUPPORT */
+ 	dut->ap_oper_chn = 0;
+ 
+ 	dut->ap_pmksa = 0;
+-- 
+2.7.4
+

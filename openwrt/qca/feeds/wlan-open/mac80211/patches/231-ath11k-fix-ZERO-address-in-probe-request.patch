@@ -1,0 +1,37 @@
+From 6107b9b56beaef918968736046c1825ec02155f6 Mon Sep 17 00:00:00 2001
+From: Carl Huang <cjhuang@codeaurora.org>
+Date: Mon, 12 Oct 2020 18:17:33 +0800
+Subject: [PATCH] ath11k: fix ZERO address in probe request
+
+Host needs to pass at least one bssid with all 0xff to firmware
+in WMI_START_SCAN_CMDID, otherwise the bssid and receiver address
+in probe requests are all ZEROs.
+
+This also fixed some hidden AP connection issue because some AP
+doesn't respond to probe request in which receiver address are
+all ZEROs.
+
+Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
+Signed-off-by: Lavanya Suresh <lavaks@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath11k/wmi.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index 6c1f9c3..fe29326 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -2325,6 +2325,10 @@ void ath11k_wmi_start_scan_init(struct ath11k *ar,
+ 	             ar->ab->wmi_ab.svc_map))
+ 		arg->scan_ctrl_flags_ext |= WMI_SCAN_FLAG_EXT_PASSIVE_SCAN_START_TIME_ENHANCE;
+ 	arg->num_bssid = 1;
++	/* fill bssid_list[0] with 0xff, otherwise
++	 * bssid and RA will be ZEROs in probe request.
++	 */
++	eth_broadcast_addr(arg->bssid_list[0].addr);
+ }
+ 
+ static inline void
+-- 
+2.7.4
+

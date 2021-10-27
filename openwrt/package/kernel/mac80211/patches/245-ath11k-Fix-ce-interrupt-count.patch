@@ -1,0 +1,144 @@
+From dff7c06e3ffb82c5af9918b14c0fae32bbcafc0d Mon Sep 17 00:00:00 2001
+From: Anilkumar Kolli <akolli@codeaurora.org>
+Date: Wed, 10 Feb 2021 15:26:54 +0530
+Subject: [PATCH] ath11k: Fix ce interrupt count
+
+CE interrupt count is based on target_ce_count.
+Use target_ce_count to request and process ce interrupts.
+
+Fixes: c5000fe803 ("ath11k: Add ipq6018 support")
+
+Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath11k/ahb.c | 12 ++++++------
+ drivers/net/wireless/ath/ath11k/pci.c | 14 +++++++-------
+ 2 files changed, 13 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
+index 42991c1a1cb7..2f6065a7f1d9 100644
+--- a/drivers/net/wireless/ath/ath11k/ahb.c
++++ b/drivers/net/wireless/ath/ath11k/ahb.c
+@@ -176,7 +176,7 @@ static void ath11k_ahb_kill_tasklets(struct ath11k_base *ab)
+ {
+ 	int i;
+ 
+-	for (i = 0; i < ab->hw_params.ce_count; i++) {
++	for (i = 0; i < ab->hw_params.target_ce_count; i++) {
+ 		struct ath11k_ce_pipe *ce_pipe = &ab->ce.ce_pipe[i];
+ 
+ 		if (ath11k_ce_get_attr_flags(ab, i) & CE_ATTR_DIS_INTR)
+@@ -289,7 +289,7 @@ static void ath11k_ahb_sync_ce_irqs(struct ath11k_base *ab)
+ 	int i;
+ 	int irq_idx;
+ 
+-	for (i = 0; i < ab->hw_params.ce_count; i++) {
++	for (i = 0; i < ab->hw_params.target_ce_count; i++) {
+ 		if (ath11k_ce_get_attr_flags(ab, i) & CE_ATTR_DIS_INTR)
+ 			continue;
+ 
+@@ -317,7 +317,7 @@ static void ath11k_ahb_ce_irqs_enable(struct ath11k_base *ab)
+ {
+ 	int i;
+ 
+-	for (i = 0; i < ab->hw_params.ce_count; i++) {
++	for (i = 0; i < ab->hw_params.target_ce_count; i++) {
+ 		if (ath11k_ce_get_attr_flags(ab, i) & CE_ATTR_DIS_INTR)
+ 			continue;
+ 		ath11k_ahb_ce_irq_enable(ab, i);
+@@ -328,7 +328,7 @@ static void ath11k_ahb_ce_irqs_disable(struct ath11k_base *ab)
+ {
+ 	int i;
+ 
+-	for (i = 0; i < ab->hw_params.ce_count; i++) {
++	for (i = 0; i < ab->hw_params.target_ce_count; i++) {
+ 		if (ath11k_ce_get_attr_flags(ab, i) & CE_ATTR_DIS_INTR)
+ 			continue;
+ 		ath11k_ahb_ce_irq_disable(ab, i);
+@@ -439,7 +439,7 @@ static void ath11k_ahb_free_irq(struct ath11k_base *ab)
+ 	int irq_idx;
+ 	int i;
+ 
+-	for (i = 0; i < ab->hw_params.ce_count; i++) {
++	for (i = 0; i < ab->hw_params.target_ce_count; i++) {
+ 		if (ath11k_ce_get_attr_flags(ab, i) & CE_ATTR_DIS_INTR)
+ 			continue;
+ 		irq_idx = ATH11K_IRQ_CE0_OFFSET + i;
+@@ -671,7 +671,7 @@ static int ath11k_ahb_config_irq(struct ath11k_base *ab)
+ 	int ret = 0;
+ 
+ 	/* Configure CE irqs */
+-	for (i = 0; i < ab->hw_params.ce_count; i++) {
++	for (i = 0; i < ab->hw_params.target_ce_count; i++) {
+ 		struct ath11k_ce_pipe *ce_pipe = &ab->ce.ce_pipe[i];
+ 
+ 		if (ath11k_ce_get_attr_flags(ab, i) & CE_ATTR_DIS_INTR)
+diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
+index c536bdf080ec..3b2a51a27808 100644
+--- a/drivers/net/wireless/ath/ath11k/pci.c
++++ b/drivers/net/wireless/ath/ath11k/pci.c
+@@ -338,7 +338,7 @@ void ath11k_pci_get_ce_msi_idx(struct ath11k_base *ab, u32 ce_id,
+ {
+ 	u32 i, msi_data_idx;
+ 
+-	for (i = 0, msi_data_idx = 0; i < ab->hw_params.ce_count; i++) {
++	for (i = 0, msi_data_idx = 0; i < ab->hw_params.target_ce_count; i++) {
+ 		if (ath11k_ce_get_attr_flags(ab, i) & CE_ATTR_DIS_INTR)
+ 			continue;
+ 
+@@ -408,7 +408,7 @@ void ath11k_pci_free_irq(struct ath11k_base *ab)
+ {
+ 	int i, irq_idx;
+ 
+-	for (i = 0; i < ab->hw_params.ce_count; i++) {
++	for (i = 0; i < ab->hw_params.target_ce_count; i++) {
+ 		if (ath11k_ce_get_attr_flags(ab, i) & CE_ATTR_DIS_INTR)
+ 			continue;
+ 		irq_idx = ATH11K_PCI_IRQ_CE0_OFFSET + i;
+@@ -439,7 +439,7 @@ static void ath11k_pci_ce_irqs_disable(struct ath11k_base *ab)
+ {
+ 	int i;
+ 
+-	for (i = 0; i < ab->hw_params.ce_count; i++) {
++	for (i = 0; i < ab->hw_params.target_ce_count; i++) {
+ 		if (ath11k_ce_get_attr_flags(ab, i) & CE_ATTR_DIS_INTR)
+ 			continue;
+ 		ath11k_pci_ce_irq_disable(ab, i);
+@@ -451,7 +451,7 @@ static void ath11k_pci_sync_ce_irqs(struct ath11k_base *ab)
+ 	int i;
+ 	int irq_idx;
+ 
+-	for (i = 0; i < ab->hw_params.ce_count; i++) {
++	for (i = 0; i < ab->hw_params.target_ce_count; i++) {
+ 		if (ath11k_ce_get_attr_flags(ab, i) & CE_ATTR_DIS_INTR)
+ 			continue;
+ 
+@@ -701,7 +701,7 @@ static int ath11k_config_msi_irq(struct ath11k_base *ab,
+ 		return ret;
+ 
+ 	/* Configure CE irqs */
+-	for (i = 0, msi_data_idx = 0; i < ab->hw_params.ce_count; i++) {
++	for (i = 0, msi_data_idx = 0; i < ab->hw_params.target_ce_count; i++) {
+ 		msi_data = (msi_data_idx % msi_data_count) + msi_irq_start;
+ 		irq = ath11k_hif_get_msi_irq(ab, msi_data);
+ 		ce_pipe = &ab->ce.ce_pipe[i];
+@@ -766,7 +766,7 @@ static void ath11k_pci_ce_irqs_enable(struct ath11k_base *ab)
+ {
+ 	int i;
+ 
+-	for (i = 0; i < ab->hw_params.ce_count; i++) {
++	for (i = 0; i < ab->hw_params.target_ce_count; i++) {
+ 		if (ath11k_ce_get_attr_flags(ab, i) & CE_ATTR_DIS_INTR)
+ 			continue;
+ 		ath11k_pci_ce_irq_enable(ab, i);
+@@ -935,7 +935,7 @@ static void ath11k_pci_kill_tasklets(struct ath11k_base *ab)
+ {
+ 	int i;
+ 
+-	for (i = 0; i < ab->hw_params.ce_count; i++) {
++	for (i = 0; i < ab->hw_params.target_ce_count; i++) {
+ 		struct ath11k_ce_pipe *ce_pipe = &ab->ce.ce_pipe[i];
+ 
+ 		if (ath11k_ce_get_attr_flags(ab, i) & CE_ATTR_DIS_INTR)
+-- 
+2.7.4
+

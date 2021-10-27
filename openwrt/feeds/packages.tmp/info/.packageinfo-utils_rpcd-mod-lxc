@@ -1,0 +1,23 @@
+Source-Makefile: feeds/packages/utils/rpcd-mod-lxc/Makefile
+Build-Depends: ninja/host
+Build-Depends/host: ninja/host
+
+Package: rpcd-mod-lxc
+Version: 20201208
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread +rpcd +liblxc
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: libs
+Category: Libraries
+Repository: base
+Title: LXC rpcd module
+Maintainer: Luka Perkov <luka@openwrt.org>
+Source: 
+License: ISC
+Type: ipkg
+Description: LXC rpcd module
+Luka Perkov <luka@openwrt.org>
+@@
+
+

@@ -1,0 +1,12 @@
+diff -Naur a/src/pae/ieee802_1x_kay.c b/src/pae/ieee802_1x_kay.c
+--- a/src/pae/ieee802_1x_kay.c	2021-04-15 19:56:44.498682224 +0800
++++ b/src/pae/ieee802_1x_kay.c	2021-04-15 19:57:14.239103513 +0800
+@@ -174,7 +174,7 @@
+ 	size_t body_len;
+ 	size_t i;
+ 	u8 *mi;
+-	be32 mn;
++	be32 mn=0;
+ 
+ 	if (body == NULL)
+ 		return;

@@ -1,0 +1,22 @@
+Index: opkg-9c97d5ecd795709c8584e972bfdf3aee3a5b846d/libopkg/opkg_cmd.c
+===================================================================
+--- opkg-9c97d5ecd795709c8584e972bfdf3aee3a5b846d.orig/libopkg/opkg_cmd.c
++++ opkg-9c97d5ecd795709c8584e972bfdf3aee3a5b846d/libopkg/opkg_cmd.c
+@@ -418,6 +418,7 @@ opkg_install_cmd(int argc, char **argv)
+      int i;
+      char *arg;
+      int err = 0;
++	  char **argv_store = argv;
+ 
+      if (conf->force_reinstall) {
+ 	     int saved_force_depends = conf->force_depends;
+@@ -447,7 +448,8 @@ opkg_install_cmd(int argc, char **argv)
+ 	       opkg_msg(ERROR, "Cannot install package %s.\n", arg);
+ 	       err = -1;
+ 	  }
+-	  free(arg);
++	  if (arg != argv_store[i])
++	      free(arg);
+      }
+ 
+      if (opkg_configure_packages(NULL))

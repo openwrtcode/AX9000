@@ -1,0 +1,13 @@
+Index: hostapd-2020-10-14/wpa_supplicant/main.c
+===================================================================
+--- hostapd-2020-10-14.orig/wpa_supplicant/main.c
++++ hostapd-2020-10-14/wpa_supplicant/main.c
+@@ -202,7 +202,7 @@ int main(int argc, char *argv[])
+ 
+ 	for (;;) {
+ 		c = getopt(argc, argv,
+-			   "b:Bc:C:D:de:f:g:G:hi:I:KLMm:No:O:p:P:qsTtuvW");
++			   "b:Bc:C:D:de:f:g:G:hi:I:KLMm:No:O:p:P:qsTtuv:W");
+ 		if (c < 0)
+ 			break;
+ 		switch (c) {

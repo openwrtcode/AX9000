@@ -1,0 +1,13 @@
+#!/bin/sh
+
+logger -p notice -t "hotplug.d" "61-lan: run because of $INTERFACE $ACTION"
+
+[ "$INTERFACE" = "lan" ] && {
+	bad_route=$(ip -6 route | grep "pppoe-wan" | grep "expires")
+	if [ "$ACTION" == "ifup" -a -n "$bad_route" ]; then
+		wan6_bad_route=$(ip -6 route | grep "pppoe-wan" | grep "expires"| awk 'NR==1 {print $1}')
+		if [ -n "$wan6_bad_route" ]; then
+			ip -6 route del $wan6_bad_route dev pppoe-wan metric 256
+		fi
+	fi
+}

@@ -1,0 +1,276 @@
+Subject: [PATCH] ath11k: fix max channel fw crash
+
+WMI_APPEND_TO_EXISTING_CHAN_LIST_FLAG in ath11k_wmi_send_scan_chan_list_cmd()
+consume the channel entry from the max channel entries even for the existing
+channel. Host implemented in an assumption of channel overwrite instead of
+a channel entry consumption from the scan channel list. Repeated wide band
+scan request send the ath11k_wmi_send_scan_chan_list_cmd() with
+WMI_APPEND_TO_EXISTING_CHAN_LIST_FLAG flag exceed the max channel configured,
+which trigger firmware to crash. Instead of sending append channel always
+update the full channel list through ath11k_wmi_send_scan_chan_list_cmd(),
+which avoid firmware crash.
+
+Signed-off-by: Karthikeyan Periyasamy <periyasa@codeaurora.org>
+---
+
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -3497,7 +3497,7 @@ static int ath11k_mac_op_hw_scan(struct
+ 		arg->scan_f_wide_band = true;
+ 		arg->scan_f_passive = true;
+ 		arg->chandef = req->chandef;
+-		ret = ath11k_wmi_append_scan_chan_list(ar, arg);
++		ret = ath11k_wmi_update_scan_chan_list(ar, arg);
+ 		if (ret)
+ 			goto exit;
+ 	}
+--- a/drivers/net/wireless/ath/ath11k/reg.c
++++ b/drivers/net/wireless/ath/ath11k/reg.c
+@@ -127,99 +127,7 @@ ath11k_reg_notifier(struct wiphy *wiphy,
+ 
+ int ath11k_reg_update_chan_list(struct ath11k *ar)
+ {
+-	struct ieee80211_supported_band **bands;
+-	struct scan_chan_list_params *params;
+-	struct ieee80211_channel *channel;
+-	struct ieee80211_hw *hw = ar->hw;
+-	struct channel_param *ch;
+-	enum nl80211_band band;
+-	int num_channels = 0;
+-	int params_len;
+-	int i, ret;
+-
+-	bands = hw->wiphy->bands;
+-	for (band = 0; band < NUM_NL80211_BANDS; band++) {
+-		if (!bands[band])
+-			continue;
+-
+-		for (i = 0; i < bands[band]->n_channels; i++) {
+-			if (bands[band]->channels[i].flags &
+-			    IEEE80211_CHAN_DISABLED)
+-				continue;
+-
+-			num_channels++;
+-		}
+-	}
+-
+-	if (WARN_ON(!num_channels))
+-		return -EINVAL;
+-
+-	params_len = sizeof(struct scan_chan_list_params) +
+-			num_channels * sizeof(struct channel_param);
+-	params = kzalloc(params_len, GFP_KERNEL);
+-
+-	if (!params)
+-		return -ENOMEM;
+-
+-	params->pdev_id = ar->pdev->pdev_id;
+-	params->nallchans = num_channels;
+-
+-	ch = params->ch_param;
+-
+-	for (band = 0; band < NUM_NL80211_BANDS; band++) {
+-		if (!bands[band])
+-			continue;
+-
+-		for (i = 0; i < bands[band]->n_channels; i++) {
+-			channel = &bands[band]->channels[i];
+-
+-			if (channel->flags & IEEE80211_CHAN_DISABLED)
+-				continue;
+-
+-			/* TODO: Set to true/false based on some condition? */
+-			ch->allow_ht = true;
+-			ch->allow_vht = true;
+-			ch->allow_he = true;
+-
+-			ch->dfs_set =
+-				!!(channel->flags & IEEE80211_CHAN_RADAR);
+-			ch->is_chan_passive = !!(channel->flags &
+-						IEEE80211_CHAN_NO_IR);
+-			ch->is_chan_passive |= ch->dfs_set;
+-			ch->mhz = channel->center_freq;
+-			ch->cfreq1 = channel->center_freq;
+-			ch->minpower = 0;
+-			ch->maxpower = channel->max_power;
+-			ch->maxregpower = channel->max_reg_power;
+-			ch->antennamax = channel->max_antenna_gain;
+-
+-			/* TODO: Use appropriate phymodes */
+-			if (channel->band == NL80211_BAND_2GHZ)
+-				ch->phy_mode = MODE_11G;
+-			else
+-				ch->phy_mode = MODE_11A;
+-
+-			if (channel->band == NL80211_BAND_6GHZ &&
+-			    cfg80211_channel_is_psc(channel))
+-				ch->psc_channel = true;
+-
+-			ath11k_dbg(ar->ab, ATH11K_DBG_WMI,
+-				   "mac channel [%d/%d] freq %d maxpower %d regpower %d antenna %d mode %d\n",
+-				   i, params->nallchans,
+-				   ch->mhz, ch->maxpower, ch->maxregpower,
+-				   ch->antennamax, ch->phy_mode);
+-
+-			ch++;
+-			/* TODO: use quarrter/half rate, cfreq12, dfs_cfreq2
+-			 * set_agile, reg_class_idx
+-			 */
+-		}
+-	}
+-
+-	ret = ath11k_wmi_send_scan_chan_list_cmd(ar, params);
+-	kfree(params);
+-
+-	return ret;
++	return ath11k_wmi_update_scan_chan_list(ar, NULL);
+ }
+ 
+ static void ath11k_copy_regd(struct ieee80211_regdomain *regd_orig,
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -2237,50 +2237,105 @@ int ath11k_wmi_send_peer_assoc_cmd(struc
+ 	return ret;
+ }
+ 
+-int ath11k_wmi_append_scan_chan_list(struct ath11k *ar,
++int ath11k_wmi_update_scan_chan_list(struct ath11k *ar,
+ 				     struct scan_req_params *arg)
+ {
++	struct ieee80211_supported_band **bands;
+ 	struct scan_chan_list_params *params;
+ 	struct channel_param *ch;
+ 	struct cfg80211_chan_def *chandef;
+-	struct ieee80211_channel *channel;
+-	int params_len;
+-	int ret;
++	struct ieee80211_channel *channel, *req_channel;
++	enum nl80211_band band;
++	int num_channels = 0;
++	int params_len, i, ret;
++	bool found = false;
++
++	bands = ar->hw->wiphy->bands;
++	for (band = 0; band < NUM_NL80211_BANDS; band++) {
++		if (!bands[band])
++			continue;
++
++		for (i = 0; i < bands[band]->n_channels; i++) {
++			if (bands[band]->channels[i].flags &
++			    IEEE80211_CHAN_DISABLED)
++				continue;
++
++			num_channels++;
++		}
++	}
++
++	if (WARN_ON(!num_channels))
++		return -EINVAL;
+ 
+ 	params_len = sizeof(struct scan_chan_list_params) +
+-			arg->chan_list.num_chan * sizeof(struct channel_param);
++			num_channels * sizeof(struct channel_param);
+ 	params = kzalloc(params_len, GFP_KERNEL);
+ 
+ 	if (!params)
+ 		return -ENOMEM;
+ 
+ 	params->pdev_id = ar->pdev->pdev_id;
+-	params->nallchans = arg->chan_list.num_chan;
+-	params->append_chan_list = true;
++	params->nallchans = num_channels;
+ 
+ 	ch = params->ch_param;
+-	chandef = arg->chandef;
+-	channel = chandef->chan;
++	chandef = arg ? arg->chandef : NULL;
++	req_channel = chandef ? chandef->chan : NULL;
+ 
+-	ch->mhz = arg->chan_list.chan[0].freq;
+-	ch->cfreq1 = chandef->center_freq1;
+-	ch->cfreq2 = chandef->center_freq2;
+-	ch->phy_mode = arg->chan_list.chan[0].phymode;
+-
+-	ch->dfs_set =
+-		!!(channel->flags & IEEE80211_CHAN_RADAR);
+-	ch->is_chan_passive = !!(channel->flags &
+-				IEEE80211_CHAN_NO_IR);
+-	ch->is_chan_passive |= ch->dfs_set;
+-	ch->minpower = 0;
+-	ch->maxpower = channel->max_power;
+-	ch->maxregpower = channel->max_reg_power;
+-	ch->antennamax = channel->max_antenna_gain;
+-
+-	ath11k_dbg(ar->ab, ATH11K_DBG_WMI,
+-		   "scan chan list %d freq %d cfreq1 %d phymode %d is_dfs_ch %u is_chan_passive %u\n",
+-		   params->nallchans, ch->mhz, ch->cfreq1, ch->phy_mode,
+-		   ch->dfs_set, ch->is_chan_passive);
++	for (band = 0; band < NUM_NL80211_BANDS; band++) {
++		if (!bands[band])
++			continue;
++
++		for (i = 0; i < bands[band]->n_channels; i++) {
++			channel = &bands[band]->channels[i];
++
++			if (channel->flags & IEEE80211_CHAN_DISABLED)
++				continue;
++
++			if (req_channel && !found &&
++			    req_channel->center_freq == channel->center_freq) {
++				ch->mhz = arg->chan_list.chan[0].freq;
++				ch->cfreq1 = chandef->center_freq1;
++				ch->cfreq2 = chandef->center_freq2;
++
++				ch->phy_mode = arg->chan_list.chan[0].phymode;
++				channel = req_channel;
++				found = true;
++			} else {
++				ch->mhz = channel->center_freq;
++				ch->cfreq1 = channel->center_freq;
++				ch->phy_mode = (channel->band == NL80211_BAND_2GHZ) ?
++						MODE_11G : MODE_11A;
++			}
++
++			/* TODO: Set to true/false based on some condition? */
++			ch->allow_ht = true;
++			ch->allow_vht = true;
++			ch->allow_he = true;
++
++			ch->dfs_set =
++				!!(channel->flags & IEEE80211_CHAN_RADAR);
++			ch->is_chan_passive = !!(channel->flags &
++						IEEE80211_CHAN_NO_IR);
++			ch->is_chan_passive |= ch->dfs_set;
++			ch->minpower = 0;
++			ch->maxpower = channel->max_power;
++			ch->maxregpower = channel->max_reg_power;
++			ch->antennamax = channel->max_antenna_gain;
++
++			if (channel->band == NL80211_BAND_6GHZ &&
++			    cfg80211_channel_is_psc(channel))
++				ch->psc_channel = true;
++
++			ath11k_dbg(ar->ab, ATH11K_DBG_WMI,
++				   "mac channel [%d/%d] freq %d maxpower %d regpower %d antenna %d mode %d flag 0x%x chandef: %pk\n",
++				   i, params->nallchans,
++				   ch->mhz, ch->maxpower, ch->maxregpower,
++				   ch->antennamax, ch->phy_mode, channel->flags,
++				   chandef);
++
++			ch++;
++		}
++	}
+ 
+ 	ret = ath11k_wmi_send_scan_chan_list_cmd(ar, params);
+ 	kfree(params);
+--- a/drivers/net/wireless/ath/ath11k/wmi.h
++++ b/drivers/net/wireless/ath/ath11k/wmi.h
+@@ -5866,7 +5866,7 @@ int ath11k_wmi_vdev_delete(struct ath11k
+ void ath11k_wmi_start_scan_init(struct ath11k *ar, struct scan_req_params *arg);
+ int ath11k_wmi_send_scan_start_cmd(struct ath11k *ar,
+ 				   struct scan_req_params *params);
+-int ath11k_wmi_append_scan_chan_list(struct ath11k *ar,
++int ath11k_wmi_update_scan_chan_list(struct ath11k *ar,
+ 				     struct scan_req_params *params);
+ int ath11k_wmi_send_scan_stop_cmd(struct ath11k *ar,
+ 				  struct scan_cancel_param *param);

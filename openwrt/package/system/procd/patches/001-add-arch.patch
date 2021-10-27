@@ -1,0 +1,11 @@
+diff -Naur a/system.c b/system.c
+--- a/system.c	2021-05-26 11:22:11.595715147 +0800
++++ b/system.c	2021-05-26 11:23:12.968565429 +0800
+@@ -59,6 +59,7 @@
+ 	{
+ 		blobmsg_add_string(&b, "kernel", utsname.release);
+ 		blobmsg_add_string(&b, "hostname", utsname.nodename);
++        blobmsg_add_string(&b, "system", utsname.machine);
+ 	}
+ 
+ 	if ((f = fopen("/proc/cpuinfo", "r")) != NULL)

@@ -1,0 +1,29 @@
+From 9b784f3d799506fe638ae920c3e49da3a3ec7f44 Mon Sep 17 00:00:00 2001
+From: Karthikeyan Kathirvel <kathirve@codeaurora.org>
+Date: Thu, 19 Nov 2020 15:18:19 +0530
+Subject: [PATCH] ath11k: null crash in monitor mode
+
+When monitor mode and ATH11K_DBG_DATA debug flag is enabled, it is
+causing null crashing due to accessing of rx_desc for mon skbs.
+
+Signed-off-by: Karthikeyan Kathirvel <kathirve@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath11k/dp_rx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
+index b41d81a..0fa25c1 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_rx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
+@@ -2611,7 +2611,7 @@ static void ath11k_dp_rx_deliver_msdu(struct ath11k *ar, struct napi_struct *nap
+ 		   msdu->len,
+ 		   peer ? peer->addr : NULL,
+ 		   rxcb->tid,
+-		   ar->ab->hw_params.hw_ops->rx_desc_get_da_mcbc(rxcb->rx_desc) ? "mcast" : "ucast",
++		   !(status->flag & RX_FLAG_ONLY_MONITOR)?(ar->ab->hw_params.hw_ops->rx_desc_get_da_mcbc(rxcb->rx_desc) ? "mcast" : "ucast"):"monitor-pkt",
+ 		   rxcb->seq_no,
+ 		   (status->encoding == RX_ENC_LEGACY) ? "legacy" : "",
+ 		   (status->encoding == RX_ENC_HT) ? "ht" : "",
+-- 
+2.7.4
+

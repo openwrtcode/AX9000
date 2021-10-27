@@ -1,0 +1,94 @@
+#!/bin/sh /etc/rc.common
+
+# copyright            : (C) by 2021 Lin kai 
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as         
+# published by the Free Software Foundation                                
+# You may obtain a copy of the License at                                   
+# https://opensource.org/licenses/gpl-2.0.php 
+
+
+#this script will run by /etc/init.d/rcS after all rc script.
+START=51
+#STOP=99
+
+#
+#reboot if REBOOTFLAGFILE set to REBOOT=1, by another script
+REBOOTFLAGFILE='/tmp/needreboot.stat'
+
+#/etc/init.d/rcS will save all /etc/rc.d/S* exitcode into this file
+RCSTATFILE='/tmp/rc.timing'
+
+SKIPLIST='boot_check'
+
+KEYSRVLIST='dnsmasq network'
+
+elog() {
+	tmsg="$@"
+	logger -p local0.warning -t boot_check "boot_check[${$}]: $tmsg"
+	echo "`date` boot_check[${$}]: $tmsg" >> /dev/console
+}
+
+reboot_try() {
+    elog "skip key_service_check fail reboot!"
+	reboot -f
+	exit 124
+}
+
+failed_flag() {
+	local system_current=$(nvram get flag_boot_rootfs)
+	system_current=${system_current:-0}
+	nvram set flag_try_sys$(($system_current+1))_failed=1
+	nvram set flag_ota_reboot=0
+	nvram commit
+}
+
+start() {
+	#
+	#check /etc/rc.d/S* exitcode
+	#
+
+	errcnt=0
+	touch /tmp/$$.bootcheck.log
+	cat $RCSTATFILE 2>/dev/null | grep 'EXITCODE=' | grep -v 'EXITCODE=0;' > /tmp/$$.bootcheck.log
+	while read oneline; do
+		#EXITCODE=0;ESP=0;LIMIT=10;CMD=/etc/rc.d/S99datacenter;ARG=boot;
+		match=0
+		for onesrv in $SKIPLIST; do
+			echo "$oneline" | grep -q "[0-9]\{1,100\}$onesrv;" && match=1 && break
+		done
+		[ $match -ne 0 ] && continue
+
+		match=0
+		for onesrv in $KEYSRVLIST; do
+			echo "$oneline" | grep -q "[0-9]\{1,100\}$onesrv;" && match=1 && break
+		done
+		if [ $match -ne 0 ]; then
+			let errcnt=$errcnt+1
+			elog "ERROR: KEY SERVICE FAILED: $oneline"
+		else
+			logger -p local0.warning -t boot_check "WARNING: SERVICE FAILED: $oneline"
+		fi
+	done < /tmp/$$.bootcheck.log
+
+	if [ $errcnt -ne 0 ]; then
+		#
+		elog "ERROR: $errcnt KEY SERVICE FAILED."
+		elog "Try rebooting system to recover."
+		#
+		failed_flag
+		reboot_try
+	fi
+
+	# 检查eth0 是否存在
+	cat /proc/net/dev | grep -q "eth0" > /dev/null
+	[ $? -ne 0 ] && {
+		elog "WARNING: no network device eth0 available, current system /dev/$hdd"
+		failed_flag
+		reboot_try
+	}
+}
+
+stop() {
+	echo "stop"
+}

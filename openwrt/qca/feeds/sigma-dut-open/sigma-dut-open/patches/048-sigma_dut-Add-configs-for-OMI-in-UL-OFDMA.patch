@@ -1,0 +1,37 @@
+From 7f9d02a819f2bf34e7f6da9f6da486ab74fbaee3 Mon Sep 17 00:00:00 2001
+From: Lavanya Suresh <lavaks@codeaurora.org>
+Date: Mon, 30 Nov 2020 15:14:17 +0530
+Subject: [PATCH] sigma_dut: Add configs for OMI in UL OFDMA
+
+Adding WAR commands required for UL OFDMA OMI triggertype 0.
+
+Signed-off-by: Lavanya Suresh <lavaks@codeaurora.org>
+---
+ ap.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+--- a/ap.c
++++ b/ap.c
+@@ -8178,6 +8178,7 @@ void ath11k_fw_test_commands(struct sigm
+ 		/* Disable sounding for UL OFDMA */
+ 		run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 7 0",
+ 				   ifname);
++
+ 		/* enable the equal RU allocation */
+ 		run_system_wrapper(dut,
+ 				   "ath11k-fwtest -i %s -m 0x4b -v 0 0 1",
+@@ -8209,6 +8210,14 @@ void ath11k_fw_test_commands(struct sigm
+ 		run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x48 -v 0 63 1908",
+ 				   ifname);
+ 
++		/* Below Two commands - To disable dynamic check for not using UL OFDMA
++		 * in some cases */
++		run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 302 0",
++				   ifname);
++
++		run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 310 0",
++				   ifname);
++
+ 		/* enable twt related commands by default, during basic trigger setting for
+ 		 * ofdma this can be reset */
+ 		/* BSR Trigger disable/enable UL trigger frame scheduling */

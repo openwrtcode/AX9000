@@ -1,0 +1,24 @@
+Source-Makefile: feeds/packages/net/vallumd/Makefile
+Build-Depends: ninja/host
+Build-Depends/host: ninja/host
+
+Package: vallumd
+Version: 0.1.4-1
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread +ipset +libmosquitto
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: Centralized or distributed blacklist
+Maintainer: Stijn Tintel <stijn@linux-ipv6.be>
+Source: vallumd-0.1.4.tar.gz
+License: GPL-3.0
+LicenseFiles: COPYING
+Type: ipkg
+Description:   Centralized or distributed blacklist
+Stijn Tintel <stijn@linux-ipv6.be>
+@@
+
+

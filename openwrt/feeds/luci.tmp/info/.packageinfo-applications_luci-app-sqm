@@ -1,0 +1,630 @@
+Source-Makefile: feeds/luci/applications/luci-app-sqm/Makefile
+Build-Depends: lua/host luci-base/host LUCI_CSSTIDY:csstidy/host LUCI_SRCDIET:luasrcdiet/host 
+
+Package: luci-app-sqm
+Submenu: 3. Applications
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread +sqm-scripts
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: LuCI Support for SQM Scripts
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Description:    Luci interface for the SQM scripts queue management package
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-ar
+Default: LUCI_LANG_ar||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - ar translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - ا�
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-bg
+Default: LUCI_LANG_bg||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - bg translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - български (Bulgarian)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-bn
+Default: LUCI_LANG_bn_BD||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - bn translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - বাংলা (Bengali)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-ca
+Default: LUCI_LANG_ca||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - ca translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - Català (Catalan)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-cs
+Default: LUCI_LANG_cs||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - cs translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - Čeština (Czech)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-de
+Default: LUCI_LANG_de||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - de translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - Deutsch (German)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-el
+Default: LUCI_LANG_el||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - el translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - Ελληνικά (Greek)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-en
+Default: LUCI_LANG_en||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - en translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - English
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-es
+Default: LUCI_LANG_es||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - es translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - Español (Spanish)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-fi
+Default: LUCI_LANG_fi||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - fi translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - Suomi (Finnish)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-fr
+Default: LUCI_LANG_fr||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - fr translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - Français (French)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-he
+Default: LUCI_LANG_he||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - he translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - עִבְרִית (Hebrew)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-hi
+Default: LUCI_LANG_hi||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - hi translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - हिंदी (Hindi)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-hu
+Default: LUCI_LANG_hu||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - hu translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - Magyar (Hungarian)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-it
+Default: LUCI_LANG_it||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - it translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - Italiano (Italian)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-ja
+Default: LUCI_LANG_ja||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - ja translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - 日本語 (Japanese)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-ko
+Default: LUCI_LANG_ko||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - ko translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - 한국어 (Korean)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-mr
+Default: LUCI_LANG_mr||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - mr translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - Marāṭhī (Marathi)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-ms
+Default: LUCI_LANG_ms||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - ms translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - Bahasa Melayu (Malay)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-no
+Default: LUCI_LANG_nb_NO||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - no translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - Norsk (Norwegian)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-pl
+Default: LUCI_LANG_pl||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - pl translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - Polski (Polish)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-pt
+Default: LUCI_LANG_pt||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - pt translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - Português (Portuguese)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-pt-br
+Default: LUCI_LANG_pt_BR||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - pt-br translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - Português do Brasil (Brazilian Portuguese)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-ro
+Default: LUCI_LANG_ro||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - ro translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - Română (Romanian)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-ru
+Default: LUCI_LANG_ru||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - ru translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - Русский (Russian)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-sk
+Default: LUCI_LANG_sk||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - sk translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - Slovenčina (Slovak)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-sv
+Default: LUCI_LANG_sv||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - sv translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - Svenska (Swedish)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-tr
+Default: LUCI_LANG_tr||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - tr translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - Türkçe (Turkish)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-uk
+Default: LUCI_LANG_uk||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - uk translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - Українська (Ukrainian)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-vi
+Default: LUCI_LANG_vi||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - vi translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - Tiếng Việt (Vietnamese)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-zh-cn
+Default: LUCI_LANG_zh_Hans||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - zh-cn translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - 简体中文 (Chinese Simplified)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+Package: luci-i18n-sqm-zh-tw
+Default: LUCI_LANG_zh_Hant||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-sqm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-sqm - zh-tw translation
+Maintainer: Toke Høiland-Jørgensen <toke@toke.dk>
+Source: 
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-sqm - 繁體中文 (Chinese Traditional)
+Toke Høiland-Jørgensen <toke@toke.dk>
+@@
+
+

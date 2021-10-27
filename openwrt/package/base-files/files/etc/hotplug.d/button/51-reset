@@ -1,0 +1,11 @@
+if [ "$ACTION" = "released" -a "$BUTTON" = "reset"  ]; then
+    default_hold=5
+    if [ "$SEEN" -ge $default_hold  ]; then
+        echo "RESET TO FACTORY SETTING EVENT DETECTED" > /dev/console
+        echo "PLEASE WAIT WHILE REBOOTING THE DEVICE..." > /dev/console
+        rm -rf /overlay/*
+        echo "Start ot reboot..." > /dev/console
+        reboot -f
+        echo "waiting to reboot" > /dev/console
+    fi
+fi

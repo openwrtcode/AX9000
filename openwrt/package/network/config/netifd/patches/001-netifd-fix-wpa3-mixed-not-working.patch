@@ -1,0 +1,13 @@
+Index: netifd-2021-01-09-c00c8335/scripts/netifd-wireless.sh
+===================================================================
+--- netifd-2021-01-09-c00c8335.orig/scripts/netifd-wireless.sh
++++ netifd-2021-01-09-c00c8335/scripts/netifd-wireless.sh
+@@ -258,7 +258,7 @@ wireless_vif_parse_encryption() {
+ 			auth_type=eap192
+ 		;;
+ 		psk3-mixed*|sae-mixed*)
+-			auth_type=psk-sae
++			auth_type=sae-mixed
+ 		;;
+ 		psk3*|sae*)
+ 			auth_type=sae

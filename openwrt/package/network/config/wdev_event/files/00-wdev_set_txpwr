@@ -1,0 +1,49 @@
+#!/bin/sh
+
+
+[ -e /usr/share/libubox/jshn.sh ] && . /usr/share/libubox/jshn.sh
+[ -e /lib/functions.sh ] && . /lib/functions.sh
+
+find_radio() {
+	local first_phy_idx=0
+
+
+	while [ $first_phy_idx -le 3 ]; do
+		config_get macaddr "radio$first_phy_idx" macaddr
+		config_get devicepath "radio$first_phy_idx" path
+
+		[ -n "$macaddr" ] && {
+			grep -i -q "$macaddr" "/sys/class/ieee80211/$phy/macaddress" && radio="radio$first_phy_idx" && return 0
+		}
+
+		[ -n "$devicepath" ] && {
+			case "$(readlink -f /sys/class/ieee80211/$phy/device)" in
+				*$devicepath)
+					radio="radio$first_phy_idx"
+					return 0;;
+			esac
+		}
+		first_phy_idx=$(($first_phy_idx+1))
+	done
+	return 1
+
+}
+
+[ -z "$IFNAME" ] || {
+	ubus call iwinfo info "{'device':'$IFNAME'}">/tmp/$IFNAME 2>/dev/null
+	[ -f "/tmp/$IFNAME" ] && {
+		json_load_file /tmp/$IFNAME
+		json_get_vars phy
+		[ -n "$phy" -a -d /sys/class/ieee80211/$phy ] && {
+			config_load wireless
+			
+			find_radio && {
+				config_get txpower "$radio" txpower
+				[ -n "$txpower" ] && {
+					iw dev "$IFNAME" set txpower fixed "${txpower%%.*}00"
+				}
+			}
+		}
+		rm /tmp/$IFNAME
+	}
+}

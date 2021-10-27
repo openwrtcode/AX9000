@@ -1,0 +1,12 @@
+diff -Naur a/jffs2reader.c b/jffs2reader.c
+--- a/jffs2reader.c	2021-05-07 20:11:36.647395502 +0800
++++ b/jffs2reader.c	2021-05-07 20:12:29.172378110 +0800
+@@ -75,7 +75,7 @@
+ #include <sys/stat.h>
+ #include <dirent.h>
+ #include <zlib.h>
+-
++#include <sys/sysmacros.h>
+ #include "mtd/jffs2-user.h"
+ #include "common.h"
+ 

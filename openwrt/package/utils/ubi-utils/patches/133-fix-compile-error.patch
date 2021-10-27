@@ -1,0 +1,12 @@
+diff -Naur a/lib/libmtd.c b/lib/libmtd.c
+--- a/lib/libmtd.c	2021-05-07 20:04:27.227111527 +0800
++++ b/lib/libmtd.c	2021-05-07 20:05:31.083166115 +0800
+@@ -32,7 +32,7 @@
+ #include <sys/stat.h>
+ #include <sys/ioctl.h>
+ #include <inttypes.h>
+-
++#include <sys/sysmacros.h>
+ #include <mtd/mtd-user.h>
+ #include <libmtd.h>
+ 

@@ -1,0 +1,299 @@
+From 730f568af3fac2f31467ea0ff374ea442ddc379f Mon Sep 17 00:00:00 2001
+From: Sathishkumar Muruganandam <murugana@codeaurora.org>
+Date: Fri, 20 Nov 2020 11:57:36 +0530
+Subject: [PATCH 3/3] ath11k: add AP_VLAN vif support for WDS offload in NSS
+ offload
+
+- AP_VLAN vif support is required for WDS offload to interop with mac80211
+  based 4addr STA and also for multicast-to-unicast conversion of 3addr
+  multicast to 4addr frames for each associated 4addr STA.
+
+- For each associated 4addr STA, corresponding AP_VLAN vif having same MAC
+  address as AP vif is created from hostapd upon 4addr rx_notify from NSS RX.
+
+- AP_VLAN vif support is added to add/remove interface mac80211 callbacks only
+  for NSS ext vdev handling and vdev_id, FW vdev operations are not needed.
+
+- mac80211 advertises AP_VLAN vif for sta_use_4addr drv callback in case of
+  NSS offload. Extending ath11k_mac_op_sta_use_4addr to invoke ext vdev NSS
+  APIs required for AP WDS handling.
+
+- Maintain AP_VLAN vif(s) list on corresponding AP vif and vice versa required
+  for ext vdev operations (VDEV_DOWN, DELETE, CONFIGURE_IF).
+
+- NSS require ENABLE_NAWDS and WDS_BACKHAUL to be configured for AP_VLAN
+  support via ext vdev.
+
+Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath11k/core.h |   1 +
+ drivers/net/wireless/ath/ath11k/mac.c  | 156 +++++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath11k/wmi.h  |   2 +
+ 3 files changed, 154 insertions(+), 5 deletions(-)
+
+--- a/drivers/net/wireless/ath/ath11k/core.h
++++ b/drivers/net/wireless/ath/ath11k/core.h
+@@ -267,6 +267,7 @@ struct ath11k_vif {
+ 	struct ath11k_mgmt_frame_stats mgmt_stats;
+ #ifdef CPTCFG_ATH11K_NSS_SUPPORT
+ 	struct arvif_nss nss;
++	struct list_head ap_vlan_arvifs;
+ #endif
+ };
+ 
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -4327,17 +4327,28 @@ static void ath11k_sta_rc_update_wk(stru
+ static void ath11k_sta_use_4addr_wk(struct work_struct *wk)
+ {
+ 	struct ath11k *ar;
+-	struct ath11k_vif *arvif;
++	struct ath11k_vif *arvif, *ap_vlan_arvif;
++	struct ieee80211_vif *vif;
+ 	struct ath11k_sta *arsta;
+ 	struct ieee80211_sta *sta;
++	struct ath11k_base *ab;
++	struct ath11k_peer *wds_peer;
++	u8 wds_addr[ETH_ALEN];
++	u32 wds_peer_id;
+ 	int ret = 0;
+ 
+ 	arsta = container_of(wk, struct ath11k_sta, use_4addr_wk);
+ 	sta = container_of((void *)arsta, struct ieee80211_sta, drv_priv);
+ 	arvif = arsta->arvif;
+ 	ar = arvif->ar;
++	ab = ar->ab;
+ 
+-	ath11k_dbg(ar->ab, ATH11K_DBG_MAC,
++	if (ab->nss.enabled) {
++		ap_vlan_arvif = arsta->arvif;
++		arvif = ap_vlan_arvif->nss.ap_vif;
++	}
++
++	ath11k_dbg(ab, ATH11K_DBG_MAC,
+ 		   "setting USE_4ADDR for STA %pM\n", sta->addr);
+ 
+ 	ret = ath11k_wmi_set_peer_param(ar, sta->addr,
+@@ -4345,8 +4356,92 @@ static void ath11k_sta_use_4addr_wk(stru
+ 					WMI_PEER_USE_4ADDR, 1);
+ 
+ 	if (ret)
+-		ath11k_warn(ar->ab, "failed to set 4addr for STA %pM: %d\n",
++		ath11k_warn(ab, "failed to set 4addr for STA %pM: %d\n",
+ 			    sta->addr, ret);
++
++	if (!ab->nss.enabled)
++		return;
++
++	vif = ap_vlan_arvif->vif;
++
++	spin_lock_bh(&ab->base_lock);
++	wds_peer = ath11k_peer_find_by_addr(ab, sta->addr);
++	if (!wds_peer) {
++		spin_unlock_bh(&ab->base_lock);
++		ath11k_warn(ab, "mac sta use 4addr failed to find peer %pM\n",
++			    sta->addr);
++		return;
++	}
++
++	wds_peer_id = wds_peer->peer_id;
++	ether_addr_copy(wds_addr, wds_peer->addr);
++	spin_unlock_bh(&ab->base_lock);
++
++	ret = ath11k_nss_ext_vdev_configure(ap_vlan_arvif);
++	if (ret) {
++		ath11k_warn(ab, "failed to nss cfg ext vdev %pM: %d\n",
++			    vif->addr, ret);
++		goto ext_vdev_delete;
++	}
++
++	ret = ath11k_nss_ext_vdev_cfg_wds_peer(ap_vlan_arvif,
++					       wds_addr, wds_peer_id);
++	if (ret) {
++		ath11k_warn(ab, "failed to nss cfg_wds_peer %pM on %pM: %d\n",
++			    sta->addr, vif->addr, ret);
++		goto ext_vdev_delete;
++	}
++
++	ret = ath11k_nss_ext_vdev_wds_4addr_allow(ap_vlan_arvif,
++						  wds_peer_id);
++	if (ret) {
++		ath11k_warn(ab, "failed to nss 4addr allow %pM: %d\n",
++			    vif->addr, ret);
++		goto ext_vdev_delete;
++	}
++
++	ret = ath11k_nss_ext_vdev_up(ap_vlan_arvif);
++	if (ret) {
++		ath11k_warn(ab, "failed to nss ext vdev up %pM: %d\n",
++			    vif->addr, ret);
++		goto ext_vdev_delete;
++	}
++
++	spin_lock_bh(&ab->base_lock);
++	wds_peer->nss.ext_vdev_up = true;
++	spin_unlock_bh(&ab->base_lock);
++
++	/* NAWDS and CFG_WDS_BACKHAUL configs should be done on corresponding
++	 * AP vif of the AP_VLAN vif
++	 */
++	ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
++					    WMI_VDEV_PARAM_AP_ENABLE_NAWDS,
++					    MIN_IDLE_INACTIVE_TIME_SECS);
++	if (ret) {
++		ath11k_warn(ab, "failed to set vdev %i nawds parameters: %d\n",
++			    arvif->vdev_id, ret);
++		goto ext_vdev_down;
++	}
++
++	ret = ath11k_nss_vdev_set_cmd(arvif,
++				      NSS_WIFI_VDEV_CFG_WDS_BACKHAUL_CMD,
++				      true);
++	if (ret) {
++		ath11k_warn(ab, "failed to cfg wds backhaul in nss %d\n",
++			    ret);
++		goto ext_vdev_down;
++	}
++
++	return;
++
++ext_vdev_down:
++	ath11k_nss_ext_vdev_down(ap_vlan_arvif);
++ext_vdev_delete:
++	ath11k_nss_ext_vdev_delete(ap_vlan_arvif);
++
++	spin_lock_bh(&ar->data_lock);
++	list_del(&ap_vlan_arvif->list);
++	spin_unlock_bh(&ar->data_lock);
+ }
+ 
+ static int ath11k_mac_inc_num_stations(struct ath11k_vif *arvif,
+@@ -4645,9 +4740,25 @@ static void ath11k_mac_op_sta_use_4addr(
+                                        struct ieee80211_sta *sta)
+ {
+ 	struct ath11k *ar = hw->priv;
++	struct ath11k_vif *arvif = (void *)vif->drv_priv;
+ 	struct ath11k_sta *arsta = (struct ath11k_sta *)sta->drv_priv;
++	struct ath11k_vif *ap_arvif = NULL;
+ 
+ 	if (!arsta->use_4addr_set) {
++		if (ar->ab->nss.enabled && vif->type == NL80211_IFTYPE_AP_VLAN) {
++			/* 4addr STA is initially associated to AP vif, change
++			 * it to AP_VLAN vif and add AP_VLAN vif to AP vifs list
++			 */
++			ap_arvif = arsta->arvif;
++			arvif->nss.ap_vif = ap_arvif;
++
++			spin_lock_bh(&ar->data_lock);
++			list_add(&arvif->list, &ap_arvif->ap_vlan_arvifs);
++			spin_unlock_bh(&ar->data_lock);
++
++			arsta->arvif = arvif;
++		}
++
+ 		ieee80211_queue_work(ar->hw, &arsta->use_4addr_wk);
+ 		arsta->use_4addr_set = true;
+ 	}
+@@ -5977,7 +6088,8 @@ static int ath11k_mac_op_add_interface(s
+ 		goto err;
+ 	}
+ 
+-	if (ar->num_created_vdevs > (TARGET_NUM_VDEVS - 1)) {
++	if (vif->type != NL80211_IFTYPE_AP_VLAN  &&
++	     ar->num_created_vdevs > (TARGET_NUM_VDEVS - 1)) {
+ 		ath11k_warn(ab, "failed to create vdev %u, reached max vdev limit %d\n",
+ 			    ar->num_created_vdevs, TARGET_NUM_VDEVS);
+ 		ret = -EBUSY;
+@@ -5990,6 +6102,25 @@ static int ath11k_mac_op_add_interface(s
+ 	arvif->vif = vif;
+ 
+ 	INIT_LIST_HEAD(&arvif->list);
++
++	if (vif->type == NL80211_IFTYPE_AP_VLAN && ab->nss.enabled) {
++		ret = ath11k_nss_ext_vdev_create(arvif);
++		if (ret) {
++			ath11k_warn(ab, "failed to create ext vdev %pM: %d\n",
++				    vif->addr, ret);
++			goto err;
++		}
++
++		if (ath11k_frame_mode == ATH11K_HW_TXRX_ETHERNET &&
++		    ieee80211_set_hw_80211_encap(vif, true)) {
++			arvif->nss.encap = ATH11K_HW_TXRX_ETHERNET;
++			arvif->nss.decap = ATH11K_HW_TXRX_ETHERNET;
++		}
++
++		mutex_unlock(&ar->conf_mutex);
++		return ret;
++	}
++
+ 	INIT_DELAYED_WORK(&arvif->connection_loss_work,
+                           ath11k_mac_vif_sta_connection_loss_work);
+ 
+@@ -6020,6 +6151,7 @@ static int ath11k_mac_op_add_interface(s
+ 		fallthrough;
+ 	case NL80211_IFTYPE_AP:
+ 		arvif->vdev_type = WMI_VDEV_TYPE_AP;
++		INIT_LIST_HEAD(&arvif->ap_vlan_arvifs);
+ 		break;
+ 	case NL80211_IFTYPE_MONITOR:
+ 		arvif->vdev_type = WMI_VDEV_TYPE_MONITOR;
+@@ -6292,14 +6424,25 @@ static void ath11k_mac_op_remove_interfa
+ {
+ 	struct ath11k *ar = hw->priv;
+ 	struct ath11k_vif *arvif = ath11k_vif_to_arvif(vif);
++	struct ath11k_vif *ap_vlan_arvif, *tmp;
+ 	struct ath11k_base *ab = ar->ab;
+ 	int ret;
+ 	int i;
+ 
+-	cancel_delayed_work_sync(&arvif->connection_loss_work);
+-
+ 	mutex_lock(&ar->conf_mutex);
+ 
++	if (vif->type == NL80211_IFTYPE_AP_VLAN) {
++		ath11k_nss_ext_vdev_delete(arvif);
++
++		spin_lock_bh(&ar->data_lock);
++		list_del(&arvif->list);
++		spin_unlock_bh(&ar->data_lock);
++
++		goto unlock;
++	}
++
++	cancel_delayed_work_sync(&arvif->connection_loss_work);
++
+ 	ath11k_dbg(ab, ATH11K_DBG_MAC, "mac remove interface (vdev %d)\n",
+ 		   arvif->vdev_id);
+ 
+@@ -6308,6 +6451,10 @@ static void ath11k_mac_op_remove_interfa
+ 		if (ret)
+ 			ath11k_warn(ab, "failed to submit AP self-peer removal on vdev %d: %d\n",
+ 				    arvif->vdev_id, ret);
++
++		list_for_each_entry_safe(ap_vlan_arvif, tmp, &arvif->ap_vlan_arvifs,
++					 list)
++			ath11k_nss_ext_vdev_delete(ap_vlan_arvif);
+ 	}
+ 
+ 	ath11k_nss_vdev_delete(arvif);
+@@ -6352,7 +6499,7 @@ err_vdev_del:
+ 	/* Remove TWT related files and directory */
+ 	debugfs_remove_recursive(arvif->debugfs_twt);
+ 	arvif->debugfs_twt = NULL;
+-
++unlock:
+ 	mutex_unlock(&ar->conf_mutex);
+ }
+ 
+--- a/drivers/net/wireless/ath/ath11k/wmi.h
++++ b/drivers/net/wireless/ath/ath11k/wmi.h
+@@ -4838,6 +4838,8 @@ enum wmi_vdev_subtype {
+ 	WMI_VDEV_SUBTYPE_MESH_11S,
+ };
+ 
++#define MIN_IDLE_INACTIVE_TIME_SECS 256
++
+ enum wmi_sta_powersave_param {
+ 	WMI_STA_PS_PARAM_RX_WAKE_POLICY = 0,
+ 	WMI_STA_PS_PARAM_TX_WAKE_THRESHOLD = 1,

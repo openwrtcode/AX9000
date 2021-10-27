@@ -1,0 +1,1228 @@
+diff -Naur a/arch/arm64/boot/dts/qcom/Makefile b/arch/arm64/boot/dts/qcom/Makefile
+--- a/arch/arm64/boot/dts/qcom/Makefile	2021-05-10 10:43:53.571568743 +0800
++++ b/arch/arm64/boot/dts/qcom/Makefile	2021-05-10 11:00:26.000000000 +0800
+@@ -4,37 +4,7 @@
+ 				qcom-ipq6018-db-cp01.dtb \
+ 				qcom-ipq6018-db-cp02.dtb
+ endif
+-ifneq ($(CONFIG_IPQ_FLASH_16M_PROFILE),)
+ dtb-$(CONFIG_ARCH_QCOM) += \
+-	qcom-ipq5018-mp02.1.dtb \
+-	qcom-ipq5018-mp03.1.dtb
+-ifeq ($(CONFIG_IPQ_FLASH_16M_PROFILE_DEBUG),y)
+-dtb-$(CONFIG_ARCH_QCOM) += \
+-	qcom-ipq5018-db-mp02.1.dtb \
+-	qcom-ipq5018-db-mp03.1.dtb
+-endif
+-else
+-dtb-$(CONFIG_ARCH_QCOM) += \
+-				qcom-ipq5018-sod.dtb \
+-				qcom-ipq5018-emulation-c1.dtb \
+-				qcom-ipq5018-emulation-c2.dtb \
+-				qcom-ipq5018-emulation-c3.dtb \
+-				qcom-ipq5018-mp02.1.dtb \
+-				qcom-ipq5018-mp03.1.dtb \
+-				qcom-ipq5018-mp03.1-c2.dtb \
+-				qcom-ipq5018-mp03.1-c3.dtb \
+-				qcom-ipq5018-mp03.3.dtb \
+-				qcom-ipq5018-mp03.3-c2.dtb \
+-				qcom-ipq5018-mp03.5-c1.dtb \
+-				qcom-ipq5018-mp03.5-c2.dtb \
+-				qcom-ipq5018-mp03.6-c1.dtb \
+-				qcom-ipq5018-mp03.6-c2.dtb \
+-				qcom-ipq5018-db-mp02.1.dtb \
+-				qcom-ipq5018-db-mp03.1.dtb \
+-				qcom-ipq5018-db-mp03.1-c2.dtb \
+-				qcom-ipq5018-db-mp03.3.dtb \
+-				qcom-ipq5018-db-mp03.3-c2.dtb \
+-				qcom-ipq5018-db-mp03.3-c3.dtb \
+ 				qcom-ipq6018-cp01-c1.dtb \
+ 				qcom-ipq6018-cp01-c2.dtb \
+ 				qcom-ipq6018-cp01-c3.dtb \
+@@ -65,7 +35,6 @@
+ 				qcom-ipq807x-oak03.dtb \
+ 				qcom-ipq807x-db.hk01.dtb \
+ 				qcom-ipq807x-db.hk02.dtb
+-endif
+ 
+ always		:= $(dtb-y)
+ subdir-y	:= $(dts-dirs)
+diff -Naur a/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk01.c5.dts b/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk01.c5.dts
+--- a/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk01.c5.dts	2021-05-10 10:43:53.587568945 +0800
++++ b/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk01.c5.dts	2021-05-10 10:58:21.000000000 +0800
+@@ -871,27 +871,7 @@
+ 				mhi,ee = <0x4>;
+ 			};
+ 
+-			mhi_chan@2 {
+-				reg = <2>;
+-				label = "SAHARA";
+-				mhi,num-elements = <128>;
+-				mhi,event-ring = <1>;
+-				mhi,chan-dir = <1>;
+-				mhi,data-type = <0>;
+-				mhi,doorbell-mode = <2>;
+-				mhi,ee = <0x2>;
+-			};
+ 
+-			mhi_chan@3 {
+-				reg = <3>;
+-				label = "SAHARA";
+-				mhi,num-elements = <128>;
+-				mhi,event-ring = <1>;
+-				mhi,chan-dir = <2>;
+-				mhi,data-type = <0>;
+-				mhi,doorbell-mode = <2>;
+-				mhi,ee = <0x2>;
+-			};
+ 
+ 			mhi_chan@4 {
+ 				reg = <4>;
+diff -Naur a/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk01.c6.dts b/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk01.c6.dts
+--- a/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk01.c6.dts	2021-05-10 10:43:53.567568692 +0800
++++ b/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk01.c6.dts	2021-05-10 10:58:01.000000000 +0800
+@@ -47,74 +47,21 @@
+ 		#ifdef __IPQ_MEM_PROFILE_256_MB__
+ 			bootargs-append = " swiotlb=1";
+ 		#else
+-			bootargs-append = " swiotlb=1 coherent_pool=2M vmalloc=600M";
++			bootargs-append = " swiotlb=1 coherent_pool=2M";
+ 		#endif
+ 	};
+ 
+ 	reserved-memory {
+ /* No Pine attach in 256M profile */
+ #if !defined(__IPQ_MEM_PROFILE_256_MB__)
+-#ifdef __IPQ_MEM_PROFILE_512_MB__
+-	/*                      512 MB Profile
+-	 * +========+==============+=========================+
+-	 * | Region | Start Offset |          Size           |
+-	 * +--------+--------------+-------------------------+
+-	 * |  NSS   |  0x40000000  |          16MB           |
+-	 * +--------+--------------+-------------------------+
+-	 * |        |              |                         |
+-	 * | Linux  |  0x41000000  | Depends on total memory |
+-	 * |        |              |                         |
+-	 * +--------+--------------+-------------------------+
+-	 * | TZ APP |  0x4A400000  |           1MB           |
+-	 * +--------+--------------+-------------------------+
+-	 * | uboot  |  0x4A600000  |           4MB           |
+-	 * +--------+--------------+-------------------------+
+-	 * |  SBL   |  0x4AA00000  |           1MB           |
+-	 * +--------+--------------+-------------------------+
+-	 * |  smem  |  0x4AB00000  |           1MB           |
+-	 * +--------+--------------+-------------------------+
+-	 * |   TZ   |  0x4AC00000  |           4MB           |
+-	 * +--------+--------------+-------------------------+
+-	 * |   Q6   |  0x4B000000  |          55MB           |
+-	 * +--------+--------------+-------------------------+
+-	 * |  QDSS  |  0x4E700000  |           1MB           |
+-	 * +--------+--------------+-------------------------+
+-	 * | M3 Dump|  0x4E800000  |           1MB           |
+-	 * +--------+--------------+-------------------------+
+-	 * |  Pine  |  0x4E900000  |          30MB           |
+-	 * +--------+--------------+-------------------------+
+-	 * |  MHI0  |  0x50700000  |          16MB           |
+-	 * +--------+--------------+-------------------------+
+-	 * |                                                 |
+-	 * |      Rest of the memory for Linux               |
+-	 * |                                                 |
+-	 * +=================================================+
+-	 */
+-		/delete-node/ wifi_dump@4e900000;
+-		qcn9000_pcie0@4e900000 {
++		qcn9000_pcie0@51100000 {
+ 			no-map;
+-			reg = <0x0 0x4e900000 0x0 0x01e00000>;
+-		};
+ 
+-		mhi_region0: dma_pool0@50700000 {
+-			compatible = "shared-dma-pool";
+-			no-map;
+-			reg = <0x0 0x50700000 0x0 0x01000000>;
++			reg = <0x0 0x51100000 0x0 0x03700000>;
+ 		};
+-#else
+ 		/delete-node/ wifi_dump@51100000;
+ 		/delete-node/ wigig_dump@51300000;
+-		qcn9000_pcie0@51100000 {
+-			no-map;
+-			reg = <0x0 0x51100000 0x0 0x03700000>;
+-		};
+ 
+-		mhi_region0: dma_pool0@54800000 {
+-			compatible = "shared-dma-pool";
+-			no-map;
+-			reg = <0x0 0x54800000 0x0 0x01800000>;
+-		};
+-#endif
+ #endif
+ 	};
+ };
+@@ -891,19 +838,13 @@
+ 		qrtr_instance_id = <0x20>;
+ 		#address-cells = <0x2>;
+ 		#size-cells = <0x2>;
+-#if !defined(__IPQ_MEM_PROFILE_256_MB__)
+-		memory-region = <&mhi_region0>;
+-#endif
+ 
+ #if !defined(__CNSS2__)
+ 		base-addr = <0x51100000>;
+-		m3-dump-addr = <0x53E00000>;
+-		etr-addr = <0x53F00000>;
+ 		qcom,caldb-addr = <0x54000000>;
+ 		qrtr_node_id = <0x20>;
+ 		mhi,max-channels = <30>;
+ 		mhi,timeout = <10000>;
+-		qcom,board_id= <0xa4>;
+ 
+ pcie0_mhi: pcie0_mhi {
+ 		status = "ok";
+@@ -927,39 +868,15 @@
+ };
+ 
+ &wifi1 {
+-	qcom,board_id = <0x215>;
+         status = "ok";
+ };
+ 
+ &wifi2 {
+-#ifdef __IPQ_MEM_PROFILE_512_MB__
+-      /* QCN9000 tgt-mem-mode=1 layout - 30MB
+-       * +=========+==============+=========+
+-       * |  Region | Start Offset |   Size  |
+-       * +---------+--------------+---------+
+-       * | HREMOTE |  0x4E900000  |   20MB  |
+-       * +---------+--------------+---------+
+-       * | M3 Dump |  0x4FD00000  |   1MB   |
+-       * +---------+--------------+---------+
+-       * |   ETR   |  0x4FE00000  |   1MB   |
+-       * +---------+--------------+---------+
+-       * |  Caldb  |  0x4FF00000  |   8MB   |
+-       * +==================================+
+-       */
+-	base-addr = <0x4E900000>;
+-	m3-dump-addr = <0x4FD00000>;
+-	etr-addr = <0x4FE00000>;
+-	caldb-addr = <0x4FF00000>;
+-	hremote-size = <0x1400000>;
+-	tgt-mem-mode = <0x1>;
+-#else
+       /* QCN9000 tgt-mem-mode=0 layout - 55MB
+        * +=========+==============+=========+
+        * |  Region | Start Offset |   Size  |
+        * +---------+--------------+---------+
+-       * | HREMOTE |  0x51100000  |   45MB  |
+-       * +---------+--------------+---------+
+-       * | M3 DUMP |  0x53E00000  |   1MB   |
++       * | HREMOTE |  0x51100000  |   46MB  |
+        * +---------+--------------+---------+
+        * |   ETR   |  0x53F00000  |   1MB   |
+        * +---------+--------------+---------+
+@@ -967,14 +884,12 @@
+        * +==================================+
+        */
+         base-addr = <0x51100000>;
+-	m3-dump-addr = <0x53E00000>;
+         etr-addr = <0x53F00000>;
+         caldb-addr = <0x54000000>;
+-	hremote-size = <0x2D00000>;
++        hremote-size = <0x2E00000>;
+         tgt-mem-mode = <0x0>;
+-#endif
+         caldb-size = <0x800000>;
+-	board_id = <0xa4>;
++	#board_id = <0xa2>;
+         status = "ok";
+ #if defined(__CNSS2__)
+         pcie0_mhi: pcie0_mhi {
+diff -Naur a/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk10.c2.dts b/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk10.c2.dts
+--- a/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk10.c2.dts	2021-05-10 10:43:53.587568945 +0800
++++ b/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk10.c2.dts	2021-05-10 10:56:41.000000000 +0800
+@@ -116,11 +116,11 @@
+ 	 * |        |              |                         |
+ 	 * +--------+--------------+-------------------------+
+ 	 * |        |              |                         |
+-	 * |  MHI0  |  0x4EC00000  |          16MB           |
++	 * |  MHI0  |  0x4EC00000  |          11MB           |
+ 	 * |        |              |                         |
+ 	 * +--------+--------------+-------------------------+
+ 	 * |        |              |                         |
+-	 * |  MHI1  |  0x4FC00000  |          16MB           |
++	 * |  MHI1  |  0x4F700000  |          11MB           |
+ 	 * |        |              |                         |
+ 	 * +--------+--------------+-------------------------+
+ 	 * |                                                 |
+@@ -145,13 +145,13 @@
+ 		mhi_region0: dma_pool0@4ec00000 {
+ 			compatible = "shared-dma-pool";
+ 			no-map;
+-			reg = <0x0 0x4EC00000 0x0 0x01000000>;
++			reg = <0x0 0x4EC00000 0x0 0x00b00000>;
+ 		};
+ 
+-		mhi_region1: dma_pool1@4fc00000 {
++		mhi_region1: dma_pool1@4f700000 {
+ 			compatible = "shared-dma-pool";
+ 			no-map;
+-			reg = <0x0 0x4Fc00000 0x0 0x01000000>;
++			reg = <0x0 0x4F700000 0x0 0x00b00000>;
+ 		};
+ #else
+ 	/*                   Default Profile
+@@ -1052,13 +1052,11 @@
+ 
+ #if !defined(__CNSS2__)
+ 		base-addr = <0x4B000000>;
+-		m3-dump-addr = <0x4DD00000>;
+ 		etr-addr = <0x4DE00000>;
+ 		qcom,caldb-addr = <0x4DF00000>;
+ 		qrtr_node_id = <0x20>;
+ 		mhi,max-channels = <30>;
+ 		mhi,timeout = <10000>;
+-		qcom,board_id= <0xa0>;
+ 
+ 		pcie0_mhi: pcie0_mhi {
+ 			status = "ok";
+@@ -1081,13 +1079,11 @@
+ 
+ #if !defined(__CNSS2__)
+ 		base-addr = <0x4E700000>;
+-		m3-dump-addr = <0x51400000>;
+ 		etr-addr = <0x51500000>;
+ 		qcom,caldb-addr = <0x51600000>;
+ 		qrtr_node_id = <0x21>;
+ 		mhi,max-channels = <30>;
+ 		mhi,timeout = <10000>;
+-		qcom,board_id= <0xa1>;
+ 
+ 		pcie1_mhi: pcie1_mhi {
+ 			status = "ok";
+@@ -1110,9 +1106,7 @@
+        * +=========+==============+=========+
+        * |  Region | Start Offset |   Size  |
+        * +---------+--------------+---------+
+-       * | HREMOTE |  0x4B000000  |   20MB  |
+-       * +---------+--------------+---------+
+-       * | M3 Dump |  0x4C400000  |   1MB   |
++       * | HREMOTE |  0x4B000000  |   21MB  |
+        * +---------+--------------+---------+
+        * |   ETR   |  0x4C500000  |   1MB   |
+        * +---------+--------------+---------+
+@@ -1120,19 +1114,16 @@
+        * +==================================+
+        */
+ 	base-addr = <0x4B000000>;
+-	m3-dump-addr = <0x4C400000>;
+ 	etr-addr = <0x4C500000>;
+ 	caldb-addr = <0x4C600000>;
+-	hremote-size = <0x1400000>;
++	hremote-size = <0x1500000>;
+ 	tgt-mem-mode = <0x1>;
+ #else
+       /* QCN9000 tgt-mem-mode=0 layout - 55MB
+        * +=========+==============+=========+
+        * |  Region | Start Offset |   Size  |
+        * +---------+--------------+---------+
+-       * | HREMOTE |  0x4B000000  |   45MB  |
+-       * +---------+--------------+---------+
+-       * | M3 Dump |  0x4DD00000  |   1MB   |
++       * | HREMOTE |  0x4B000000  |   46MB  |
+        * +---------+--------------+---------+
+        * |   ETR   |  0x4DE00000  |   1MB   |
+        * +---------+--------------+---------+
+@@ -1140,14 +1131,12 @@
+        * +==================================+
+        */
+ 	base-addr = <0x4B000000>;
+-	m3-dump-addr = <0x4DD00000>;
+ 	etr-addr = <0x4DE00000>;
+ 	caldb-addr = <0x4DF00000>;
+-	hremote-size = <0x2D00000>;
++	hremote-size = <0x2E00000>;
+ 	tgt-mem-mode = <0x0>;
+ #endif
+ 	caldb-size = <0x800000>;
+-	board_id = <0xa0>;
+ 	status = "ok";
+ #if defined(__CNSS2__)
+ 	pcie0_mhi: pcie0_mhi {
+@@ -1162,9 +1151,7 @@
+        * +=========+==============+=========+
+        * |  Region | Start Offset |   Size  |
+        * +---------+--------------+---------+
+-       * | HREMOTE |  0x4CE00000  |   20MB  |
+-       * +---------+--------------+---------+
+-       * | M3 Dump |  0x4E200000  |   1MB   |
++       * | HREMOTE |  0x4CE00000  |   21MB  |
+        * +---------+--------------+---------+
+        * |   ETR   |  0x4E300000  |   1MB   |
+        * +---------+--------------+---------+
+@@ -1172,19 +1159,16 @@
+        * +==================================+
+        */
+ 	base-addr = <0x4CE00000>;
+-	m3-dump-addr = <0x4E200000>;
+ 	etr-addr = <0x4E300000>;
+ 	caldb-addr = <0x4E400000>;
+-	hremote-size = <0x1400000>;
++	hremote-size = <0x1500000>;
+ 	tgt-mem-mode = <0x1>;
+ #else
+       /* QCN9000 tgt-mem-mode=0 layout - 55MB
+        * +=========+==============+=========+
+        * |  Region | Start Offset |   Size  |
+        * +---------+--------------+---------+
+-       * | HREMOTE |  0x4E700000  |   45MB  |
+-       * +---------+--------------+---------+
+-       * | M3 Dump |  0x51400000  |   1MB   |
++       * | HREMOTE |  0x4E700000  |   46MB  |
+        * +---------+--------------+---------+
+        * |   ETR   |  0x51500000  |   1MB   |
+        * +---------+--------------+---------+
+@@ -1192,14 +1176,12 @@
+        * +==================================+
+        */
+ 	base-addr = <0x4E700000>;
+-	m3-dump-addr = <0x51400000>;
+ 	etr-addr = <0x51500000>;
+ 	caldb-addr = <0x51600000>;
+-	hremote-size = <0x2D00000>;
++	hremote-size = <0x2E00000>;
+ 	tgt-mem-mode = <0x0>;
+ #endif
+ 	caldb-size = <0x800000>;
+-	board_id = <0xa1>;
+ 	status = "ok";
+ #if defined(__CNSS2__)
+ 	pcie1_mhi: pcie1_mhi {
+diff -Naur a/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk10.dts b/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk10.dts
+--- a/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk10.dts	2021-05-10 10:43:53.567568692 +0800
++++ b/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk10.dts	2021-05-10 10:55:49.000000000 +0800
+@@ -111,11 +111,11 @@
+ 	 * |        |              |                         |
+ 	 * +--------+--------------+-------------------------+
+ 	 * |        |              |                         |
+-	 * |  MHI0  |  0x52500000  |          16MB           |
++	 * |  MHI0  |  0x52500000  |          11MB           |
+ 	 * |        |              |                         |
+ 	 * +--------+--------------+-------------------------+
+ 	 * |        |              |                         |
+-	 * |  MHI1  |  0x53500000  |          16MB           |
++	 * |  MHI1  |  0x53000000  |          11MB           |
+ 	 * |        |              |                         |
+ 	 * +--------+--------------+-------------------------+
+ 	 * |                                                 |
+@@ -137,13 +137,13 @@
+ 		mhi_region0: dma_pool0@52500000 {
+ 			compatible = "shared-dma-pool";
+ 			no-map;
+-			reg = <0x0 0x52500000 0x0 0x01000000>;
++			reg = <0x0 0x52500000 0x0 0x00b00000>;
+ 		};
+ 
+-		mhi_region1: dma_pool1@53500000 {
++		mhi_region1: dma_pool1@53000000 {
+ 			compatible = "shared-dma-pool";
+ 			no-map;
+-			reg = <0x0 0x53500000 0x0 0x01000000>;
++			reg = <0x0 0x53000000 0x0 0x00b00000>;
+ 		};
+ #else
+ 		qcn9000_pcie0@51100000 {
+@@ -984,13 +984,11 @@
+ 
+ #if !defined(__CNSS2__)
+ 		base-addr = <0x51100000>;
+-		m3-dump-addr = <0x53E00000>;
+ 		etr-addr = <0x53F00000>;
+ 		qcom,caldb-addr = <0x54000000>;
+ 		qrtr_node_id = <0x20>;
+ 		mhi,max-channels = <30>;
+ 		mhi,timeout = <10000>;
+-		qcom,board_id= <0xa4>;
+ 
+ 		pcie0_mhi: pcie0_mhi {
+ 			status = "ok";
+@@ -1013,13 +1011,11 @@
+ 
+ #if !defined(__CNSS2__)
+ 		base-addr = <0x54800000>;
+-		m3-dump-addr = <0x57500000>;
+ 		etr-addr = <0x57600000>;
+ 		qcom,caldb-addr = <0x57700000>;
+ 		qrtr_node_id = <0x21>;
+ 		mhi,max-channels = <30>;
+ 		mhi,timeout = <10000>;
+-		qcom,board_id= <0xa3>;
+ 
+ 		pcie1_mhi: pcie1_mhi {
+ 			status = "ok";
+@@ -1046,9 +1042,7 @@
+        * +=========+==============+=========+
+        * |  Region | Start Offset |   Size  |
+        * +---------+--------------+---------+
+-       * | HREMOTE |  0x4E900000  |   20MB  |
+-       * +---------+--------------+---------+
+-       * | M3 Dump |  0x4FD00000  |   1MB   |
++       * | HREMOTE |  0x4E900000  |   21MB  |
+        * +---------+--------------+---------+
+        * |   ETR   |  0x4FE00000  |   1MB   |
+        * +---------+--------------+---------+
+@@ -1056,19 +1050,16 @@
+        * +==================================+
+        */
+ 	base-addr = <0x4E900000>;
+-	m3-dump-addr = <0x4FD00000>;
+ 	etr-addr = <0x4FE00000>;
+ 	caldb-addr = <0x4FF00000>;
+-	hremote-size = <0x1400000>;
++	hremote-size = <0x1500000>;
+ 	tgt-mem-mode = <0x1>;
+ #else
+       /* QCN9000 tgt-mem-mode=0 layout - 55MB
+        * +=========+==============+=========+
+        * |  Region | Start Offset |   Size  |
+        * +---------+--------------+---------+
+-       * | HREMOTE |  0x51100000  |   45MB  |
+-       * +---------+--------------+---------+
+-       * | M3 Dump |  0x53E00000  |   1MB   |
++       * | HREMOTE |  0x51100000  |   46MB  |
+        * +---------+--------------+---------+
+        * |   ETR   |  0x53F00000  |   1MB   |
+        * +---------+--------------+---------+
+@@ -1076,14 +1067,12 @@
+        * +==================================+
+        */
+ 	base-addr = <0x51100000>;
+-	m3-dump-addr = <0x53E00000>;
+ 	etr-addr = <0x53F00000>;
+ 	caldb-addr = <0x54000000>;
+-	hremote-size = <0x2D00000>;
++	hremote-size = <0x2E00000>;
+ 	tgt-mem-mode = <0x0>;
+ #endif
+ 	caldb-size = <0x800000>;
+-	board_id = <0xa4>;
+ 	status = "ok";
+ #if defined(__CNSS2__)
+ 	pcie0_mhi: pcie0_mhi {
+@@ -1098,9 +1087,7 @@
+        * +=========+==============+=========+
+        * |  Region | Start Offset |   Size  |
+        * +---------+--------------+---------+
+-       * | HREMOTE |  0x50700000  |   20MB  |
+-       * +---------+--------------+---------+
+-       * | M3 Dump |  0x51B00000  |   1MB   |
++       * | HREMOTE |  0x50700000  |   21MB  |
+        * +---------+--------------+---------+
+        * |   ETR   |  0x51C00000  |   1MB   |
+        * +---------+--------------+---------+
+@@ -1108,19 +1095,16 @@
+        * +==================================+
+        */
+ 	base-addr = <0x50700000>;
+-	m3-dump-addr = <0x51B00000>;
+ 	etr-addr = <0x51C00000>;
+ 	caldb-addr = <0x51D00000>;
+-	hremote-size = <0x1400000>;
++	hremote-size = <0x1500000>;
+ 	tgt-mem-mode = <0x1>;
+ #else
+       /* QCN9000 tgt-mem-mode=0 layout - 55MB
+        * +=========+==============+=========+
+        * |  Region | Start Offset |   Size  |
+        * +---------+--------------+---------+
+-       * | HREMOTE |  0x54800000  |   45MB  |
+-       * +---------+--------------+---------+
+-       * | M3 Dump |  0x57500000  |   1MB   |
++       * | HREMOTE |  0x54800000  |   46MB  |
+        * +---------+--------------+---------+
+        * |   ETR   |  0x57600000  |   1MB   |
+        * +---------+--------------+---------+
+@@ -1128,14 +1112,12 @@
+        * +==================================+
+        */
+ 	base-addr = <0x54800000>;
+-	m3-dump-addr = <0x57500000>;
+ 	etr-addr = <0x57600000>;
+ 	caldb-addr = <0x57700000>;
+-	hremote-size = <0x2D00000>;
++	hremote-size = <0x2E00000>;
+ 	tgt-mem-mode = <0x0>;
+ #endif
+ 	caldb-size = <0x800000>;
+-	board_id = <0xa3>;
+ 	status = "ok";
+ #if defined(__CNSS2__)
+ 	pcie1_mhi: pcie1_mhi {
+diff -Naur a/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk12.dts b/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk12.dts
+--- a/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk12.dts	2021-05-10 10:43:53.559568591 +0800
++++ b/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk12.dts	2021-05-10 10:54:37.000000000 +0800
+@@ -116,11 +116,11 @@
+ 	 * |        |              |                         |
+ 	 * +--------+--------------+-------------------------+
+ 	 * |        |              |                         |
+-	 * |  MHI0  |  0x4EC00000  |          16MB           |
++	 * |  MHI0  |  0x4EC00000  |          11MB           |
+ 	 * |        |              |                         |
+ 	 * +--------+--------------+-------------------------+
+ 	 * |        |              |                         |
+-	 * |  MHI1  |  0x4FC00000  |          16MB           |
++	 * |  MHI1  |  0x4F700000  |          11MB           |
+ 	 * |        |              |                         |
+ 	 * +--------+--------------+-------------------------+
+ 	 * |                                                 |
+@@ -145,13 +145,13 @@
+ 		mhi_region0: dma_pool0@4ec00000 {
+ 			compatible = "shared-dma-pool";
+ 			no-map;
+-			reg = <0x0 0x4EC00000 0x0 0x01000000>;
++			reg = <0x0 0x4EC00000 0x0 0x00b00000>;
+ 		};
+ 
+-		mhi_region1: dma_pool1@4fc00000 {
++		mhi_region1: dma_pool1@4f700000 {
+ 			compatible = "shared-dma-pool";
+ 			no-map;
+-			reg = <0x0 0x4FC00000 0x0 0x01000000>;
++			reg = <0x0 0x4F700000 0x0 0x00b00000>;
+ 		};
+ #else
+ 	/*                   Default Profile
+@@ -1081,9 +1081,7 @@
+        * +=========+==============+=========+
+        * |  Region | Start Offset |   Size  |
+        * +---------+--------------+---------+
+-       * | HREMOTE |  0x4B000000  |   20MB  |
+-       * +---------+--------------+---------+
+-       * | M3 Dump |  0x4C400000  |   1MB   |
++       * | HREMOTE |  0x4B000000  |   21MB  |
+        * +---------+--------------+---------+
+        * |   ETR   |  0x4C500000  |   1MB   |
+        * +---------+--------------+---------+
+@@ -1091,19 +1089,16 @@
+        * +==================================+
+        */
+ 	base-addr = <0x4B000000>;
+-	m3-dump-addr = <0x4C400000>;
+ 	etr-addr = <0x4C500000>;
+ 	caldb-addr = <0x4C600000>;
+-	hremote-size = <0x1400000>;
++	hremote-size = <0x1500000>;
+ 	tgt-mem-mode = <0x1>;
+ #else
+       /* QCN9000 tgt-mem-mode=0 layout - 55MB
+        * +=========+==============+=========+
+        * |  Region | Start Offset |   Size  |
+        * +---------+--------------+---------+
+-       * | HREMOTE |  0x4B000000  |   45MB  |
+-       * +---------+--------------+---------+
+-       * | M3 Dump |  0x4DD00000  |   1MB   |
++       * | HREMOTE |  0x4B000000  |   46MB  |
+        * +---------+--------------+---------+
+        * |   ETR   |  0x4DE00000  |   1MB   |
+        * +---------+--------------+---------+
+@@ -1111,10 +1106,9 @@
+        * +==================================+
+        */
+ 	base-addr = <0x4B000000>;
+-	m3-dump-addr = <0x4DD00000>;
+ 	etr-addr = <0x4DE00000>;
+ 	caldb-addr = <0x4DF00000>;
+-	hremote-size = <0x2D00000>;
++	hremote-size = <0x2E00000>;
+ 	tgt-mem-mode = <0x0>;
+ #endif
+ 	caldb-size = <0x800000>;
+@@ -1132,9 +1126,7 @@
+        * +=========+==============+=========+
+        * |  Region | Start Offset |   Size  |
+        * +---------+--------------+---------+
+-       * | HREMOTE |  0x4CE00000  |   20MB  |
+-       * +---------+--------------+---------+
+-       * | M3 Dump |  0x4E200000  |   1MB   |
++       * | HREMOTE |  0x4CE00000  |   21MB  |
+        * +---------+--------------+---------+
+        * |   ETR   |  0x4E300000  |   1MB   |
+        * +---------+--------------+---------+
+@@ -1142,19 +1134,16 @@
+        * +==================================+
+        */
+ 	base-addr = <0x4CE00000>;
+-	m3-dump-addr = <0x4E200000>;
+ 	etr-addr = <0x4E300000>;
+ 	caldb-addr = <0x4E400000>;
+-	hremote-size = <0x1400000>;
++	hremote-size = <0x1500000>;
+ 	tgt-mem-mode = <0x1>;
+ #else
+       /* QCN9000 tgt-mem-mode=0 layout - 55MB
+        * +=========+==============+=========+
+        * |  Region | Start Offset |   Size  |
+        * +---------+--------------+---------+
+-       * | HREMOTE |  0x4E700000  |   45MB  |
+-       * +---------+--------------+---------+
+-       * | M3 Dump |  0x51400000  |   1MB   |
++       * | HREMOTE |  0x4E700000  |   46MB  |
+        * +---------+--------------+---------+
+        * |   ETR   |  0x51500000  |   1MB   |
+        * +---------+--------------+---------+
+@@ -1162,10 +1151,9 @@
+        * +==================================+
+        */
+ 	base-addr = <0x4E700000>;
+-	m3-dump-addr = <0x51400000>;
+ 	etr-addr = <0x51500000>;
+ 	caldb-addr = <0x51600000>;
+-	hremote-size = <0x2D00000>;
++	hremote-size = <0x2E00000>;
+ 	tgt-mem-mode = <0x0>;
+ #endif
+ 	caldb-size = <0x800000>;
+diff -Naur a/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk14.dts b/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk14.dts
+--- a/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk14.dts	2021-05-10 10:43:53.567568692 +0800
++++ b/arch/arm64/boot/dts/qcom/qcom-ipq807x-hk14.dts	2021-05-10 10:53:46.000000000 +0800
+@@ -16,6 +16,7 @@
+  */
+ #include "qcom-ipq807x-soc.dtsi"
+ #include "qcom-ipq807x-hk-cpu.dtsi"
++#include <dt-bindings/clock/qca,adss-ipq807x.h>
+ 
+ / {
+ 	#address-cells = <0x2>;
+@@ -105,7 +106,7 @@
+ 	 * |        |              |                         |
+ 	 * +--------+--------------+-------------------------+
+ 	 * |        |              |                         |
+-	 * |  MHI0  |  0x50700000  |          16MB           |
++	 * |  MHI0  |  0x50700000  |          11MB           |
+ 	 * |        |              |                         |
+ 	 * +--------+--------------+-------------------------+
+ 	 * |                                                 |
+@@ -122,7 +123,7 @@
+ 		mhi_region0: dma_pool0@50700000 {
+ 			compatible = "shared-dma-pool";
+ 			no-map;
+-			reg = <0x0 0x50700000 0x0 0x01000000>;
++			reg = <0x0 0x50700000 0x0 0x00b00000>;
+ 		};
+ #else
+ 		qcn9000_pcie0@51100000 {
+@@ -143,27 +144,24 @@
+ };
+ 
+ &tlmm {
+-	pinctrl-0 = <&btcoex_pins>;
++	pinctrl-0 = <&pwm_pins>;
+ 	pinctrl-names = "default";
+ 
+-	btcoex_pins: btcoex_pins {
+-		mux_0 {
+-			pins = "gpio64";
+-			function = "pta1_1";
+-			drive-strength = <6>;
+-			bias-pull-down;
+-		};
+-		mux_1 {
+-			pins = "gpio65";
+-			function = "pta1_2";
+-			drive-strength = <6>;
+-			bias-pull-down;
++    pwm_pins: pwm_pinmux {
++        mux_1 {
++            pins = "gpio63";
++            function = "pwm01";
++            drive-strength = <8>;
++		};
++        mux_2 {
++            pins = "gpio64";
++            function = "pwm11";
++            drive-strength = <8>;
+ 		};
+-		mux_2 {
++        mux_3 {
+ 			pins = "gpio66";
+-			function = "pta1_0";
+-			drive-strength = <6>;
+-			bias-pull-down;
++            function = "pwm21";
++            drive-strength = <8>;
+ 		};
+ 	};
+ 
+@@ -183,7 +181,7 @@
+ 		mux_2 {
+ 			pins = "gpio44";
+ 			function = "gpio";
+-			bias-pull-up;
++			bias-pull-down;
+ 		};
+ 	};
+ 
+@@ -195,6 +193,14 @@
+ 			bias-disable;
+ 		};
+ 	};
++    i2c_opensource_pins: i2c_opensource_pinmux {
++		mux {
++			pins = "gpio0", "gpio2";
++			function = "blsp5_i2c";
++			drive-strength = <8>;
++			bias-disable;
++		};
++	};
+ 
+ 	spi_0_pins: spi_0_pins {
+ 		mux {
+@@ -263,19 +269,17 @@
+ 		};
+ 	};
+ 
+-	hsuart_pins: hsuart_pins {
+-		mux {
+-			pins = "gpio46", "gpio47", "gpio48", "gpio49";
+-			function = "blsp2_uart";
++	button_pins: button_pins {
++		mesh_button {
++			pins = "gpio46";
++			function = "gpio";
+ 			drive-strength = <8>;
+-			bias-disable;
++			bias-pull-up;
+ 		};
+-	};
+ 
+-	button_pins: button_pins {
+ 
+-		wps_button {
+-			pins = "gpio34";
++		reset_button {
++			pins = "gpio47";
+ 			function = "gpio";
+ 			drive-strength = <8>;
+ 			bias-pull-up;
+@@ -283,26 +287,52 @@
+ 	};
+ 
+ 	led_pins: led_pins {
+-		led_2g {
+-			pins = "gpio42";
++		led_blue {
++			pins = "gpio48";
+ 			function = "gpio";
+ 			drive-strength = <8>;
+ 			bias-pull-down;
+ 		};
+ 
+-		led_5g {
+-			pins = "gpio43";
++		led_yellow {
++			pins = "gpio52";
+ 			function = "gpio";
+ 			drive-strength = <8>;
+ 			bias-pull-down;
+ 		};
++		net_blue {
++			pins = "gpio51";
++			function = "gpio";
++			drive-strength = <8>;
++			bias-pull-down;
+ 	};
+ 
+-	uniphy_pins: uniphy_pinmux {
+-		mux {
+-			pins = "gpio60";
+-			function = "rx2";
+-			bias-disable;
++		net_yellow {
++			pins = "gpio50";
++			function = "gpio";
++			drive-strength = <8>;
++			bias-pull-down;
++		};
++
++		led_ring0 {
++			pins = "gpio63";
++			function = "gpio";
++			drive-strength = <8>;
++			bias-pull-down;
++		};
++
++		led_ring1 {
++			pins = "gpio64";
++			function = "gpio";
++			drive-strength = <8>;
++			bias-pull-down;
++		};
++
++		led_ring2 {
++			pins = "gpio66";
++			function = "gpio";
++			drive-strength = <8>;
++			bias-pull-down;
+ 		};
+ 	};
+ 
+@@ -324,15 +354,52 @@
+ };
+ 
+ &soc {
++	i2c_opensource: i2c@78ba000 {
++		compatible = "qcom,i2c-qup-v2.2.1";
++		#address-cells = <1>;
++		#size-cells = <0>;
++		reg = <0x78ba000 0x600>;
++		interrupts = <GIC_SPI 300 0x4>;
++		clocks = <&gcc GCC_BLSP1_AHB_CLK>,
++			<&gcc GCC_BLSP1_QUP6_I2C_APPS_CLK>;
++		clock-names = "iface", "core";
++		clock-frequency  = <400000>;
++		dmas = <&blsp_dma 23>, <&blsp_dma 22>;
++		dma-names = "rx", "tx";
++	};
++    pwm {
++        pinctrl-0 = <&pwm_pins>;
++        pinctrl-names = "default";
++        used-pwm-indices = <1>, <1>, <1>, <0>;
++        status = "ok";
++    };
++    adss_clk: qcom,adss_clk@7700000 {
++        compatible = "qcom,adss-ipq807x";
++        reg = <0x7700100 0x200>;
++        #clock-cells = <0x1>;
++    };
++    audio: audio@7700000 {
++        compatible = "qca,ipq8074-audio-adss";
++        reg = <0x7700000 0x34>;
++        resets = <&gcc GCC_ADSS_BCR>;
++        reset-names = "blk_rst";
++    };
+ 	gpio_keys {
+ 		compatible = "gpio-keys";
+ 		pinctrl-0 = <&button_pins>;
+ 		pinctrl-names = "default";
+ 
+ 		button@1 {
+-			label = "wps";
++			label = "mesh";
+ 			linux,code = <KEY_WPS_BUTTON>;
+-			gpios = <&tlmm 34 GPIO_ACTIVE_LOW>;
++			gpios = <&tlmm 46 GPIO_ACTIVE_LOW>;
++			linux,input-type = <1>;
++			debounce-interval = <60>;
++		};
++		button@2 {
++			label = "reset";
++			linux,code = <KEY_RESTART>;
++			gpios = <&tlmm 47 GPIO_ACTIVE_LOW>;
+ 			linux,input-type = <1>;
+ 			debounce-interval = <60>;
+ 		};
+@@ -341,7 +408,7 @@
+ 	mdio@90000 {
+ 		pinctrl-0 = <&mdio_pins>;
+ 		pinctrl-names = "default";
+-		phy-reset-gpio = <&tlmm 37 0>;
++		phy-reset-gpio = <&tlmm 37 0 &tlmm 44 1>;
+ 		compatible = "qcom,ipq40xx-mdio", "qcom,qca-mdio";
+ 		phy0: ethernet-phy@0 {
+ 			reg = <0>;
+@@ -356,23 +423,19 @@
+ 			reg = <3>;
+ 		};
+ 		phy4: ethernet-phy@4 {
+-			reg = <4>;
+-		};
+-		phy5: ethernet-phy@5 {
+-			compatible ="ethernet-phy-ieee802.3-c45";
+-			reg = <7>;
++			compatible = "ethernet-phy-id004d.d101";
++			reg = <24>;
+ 		};
+ 	};
+ 
+ 	ess-switch@3a000000 {
+-		pinctrl-0 = <&uniphy_pins>;
+-		pinctrl-names = "default";
++
+ 		switch_cpu_bmp = <0x1>;  /* cpu port bitmap */
+ 		switch_lan_bmp = <0x1e>; /* lan port bitmap */
+-		switch_wan_bmp = <0x40>; /* wan port bitmap */
++		switch_wan_bmp = <0x20>; /* wan port bitmap */
+ 		switch_mac_mode = <0x0>; /* mac mode for uniphy instance0*/
+-		switch_mac_mode1 = <0xff>; /* mac mode for uniphy instance1*/
+-		switch_mac_mode2 = <0xd>; /* mac mode for uniphy instance2*/
++		switch_mac_mode1 = <0xf>; /* mac mode for uniphy instance1*/
++		switch_mac_mode2 = <0xff>; /* mac mode for uniphy instance2*/
+ 		bm_tick_mode = <0>; /* bm tick mode */
+ 		tm_tick_mode = <0>; /* tm tick mode */
+ 		qcom,port_phyinfo {
+@@ -393,9 +456,9 @@
+ 				phy_address = <3>;
+ 			};
+ 			port@4 {
+-				port_id = <6>;
+-				phy_address = <7>;
+-				ethernet-phy-ieee802.3-c45;
++				port_id = <5>;
++				phy_address = <24>;
++				port_mac_sel = "QGMAC_PORT";
+ 			};
+ 		};
+ 
+@@ -656,15 +719,10 @@
+ 						sp = <60>;
+ 						cfg = <0 32 0 32>;
+ 					};
+-					group@1 {
+-						sp = <61>;
+-						cfg = <1 33 1 33>;
+-					};
+ 				};
+ 				l0scheduler {
+ 					group@0 {
+ 						ucast_queue = <240>;
+-						ucast_loop_pri = <16>;
+ 						mcast_queue = <296>;
+ 						cfg = <60 0 144 0 144>;
+ 					};
+@@ -724,12 +782,12 @@
+ 	dp5 {
+ 		device_type = "network";
+ 		compatible = "qcom,nss-dp";
+-		qcom,id = <6>;
+-		reg = <0x3a007000 0x3fff>;
+-		qcom,mactype = <1>;
++		qcom,id = <5>;
++		reg = <0x3a001800 0x200>;
++		qcom,mactype = <0>;
+ 		local-mac-address = [000000000000];
+ 		qcom,link-poll = <1>;
+-		qcom,phy-mdio-addr = <7>;
++		qcom,phy-mdio-addr = <24>;
+ 		phy-mode = "sgmii";
+ 	};
+ 
+@@ -738,15 +796,40 @@
+ 		pinctrl-0 = <&led_pins>;
+ 		pinctrl-names = "default";
+ 
+-		led_2g {
+-			label = "led_2g";
+-			gpio = <&tlmm 42 GPIO_ACTIVE_HIGH>;
++		led_sys_blue {
++			label = "led_blue";
++			gpio = <&tlmm 48 GPIO_ACTIVE_HIGH>;
++			default-state = "off";
++		};
++		led_sys_yellow {
++			label = "led_yellow";
++			gpio = <&tlmm 52 GPIO_ACTIVE_HIGH>;
++			default-state = "on";
++		};
++		led_net_blue {
++			label = "net_blue";
++			gpio = <&tlmm 51 GPIO_ACTIVE_HIGH>;
++			default-state = "off";
++		};
++		led_net_yellow {
++			label = "net_yellow";
++			gpio = <&tlmm 50 GPIO_ACTIVE_HIGH>;
++			default-state = "off";
++		};
++		led_ring0{
++			label = "led_ring0";
++			gpio = <&tlmm 63 GPIO_ACTIVE_HIGH>;
+ 			default-state = "off";
+ 		};
+ 
+-		led_5g {
+-			label = "led_5g";
+-			gpio = <&tlmm 43 GPIO_ACTIVE_HIGH>;
++		led_ring1 {
++			label = "led_ring1";
++			gpio = <&tlmm 64 GPIO_ACTIVE_HIGH>;
++			default-state = "off";
++		};
++		led_ring2 {
++			label = "led_ring2";
++			gpio = <&tlmm 66 GPIO_ACTIVE_HIGH>;
+ 			default-state = "off";
+ 		};
+ 	};
+@@ -780,9 +863,7 @@
+ };
+ 
+ &serial_blsp2 {
+-	pinctrl-0 = <&hsuart_pins>;
+-	pinctrl-names = "default";
+-	status = "ok";
++	status = "disabled";
+ };
+ 
+ &msm_imem {
+@@ -809,8 +890,46 @@
+ 	status = "ok";
+ };
+ 
+-&i2c_0 {
+-	status = "disabled";
++&i2c_opensource {
++	pinctrl-0 = <&i2c_opensource_pins>;
++	pinctrl-names = "default";
++	status = "ok";
++    emc2301@2E {
++        compatible = "smsc,emc2301";
++        reg = <0x2E>;
++        #address-cells = <1>;
++        #size-cells = <0>;
++    };
++    emc2305@2F {
++        compatible = "smsc,emc2305";
++        reg = <0x2F>;
++        #address-cells = <1>;
++        #size-cells = <0>;
++    };
++    emc2302@2C {
++        compatible = "smsc,emc2302";
++        reg = <0x2C>;
++        #address-cells = <1>;
++        #size-cells = <0>;
++    };
++    emc2303@2D {
++        compatible = "smsc,emc2303";
++        reg = <0x2D>;
++        #address-cells = <1>;
++        #size-cells = <0>;
++    };
++    emc2304@4C {
++        compatible = "smsc,emc2304";
++        reg = <0x4C>;
++        #address-cells = <1>;
++        #size-cells = <0>;
++    };
++    emc2306@4D {
++        compatible = "smsc,emc2306";
++        reg = <0x4D>;
++        #address-cells = <1>;
++        #size-cells = <0>;
++    };
+ };
+ 
+ &i2c_1 {
+@@ -896,9 +1012,7 @@
+        * +=========+==============+=========+
+        * |  Region | Start Offset |   Size  |
+        * +---------+--------------+---------+
+-       * | HREMOTE |  0x4E900000  |   20MB  |
+-       * +---------+--------------+---------+
+-       * | M3 Dump |  0x4FD00000  |   1MB   |
++       * | HREMOTE |  0x4E900000  |   21MB  |
+        * +---------+--------------+---------+
+        * |   ETR   |  0x4FE00000  |   1MB   |
+        * +---------+--------------+---------+
+@@ -906,19 +1020,16 @@
+        * +==================================+
+        */
+ 	base-addr = <0x4E900000>;
+-	m3-dump-addr = <0x4FD00000>;
+ 	etr-addr = <0x4FE00000>;
+ 	caldb-addr = <0x4FF00000>;
+-	hremote-size = <0x1400000>;
++	hremote-size = <0x1500000>;
+ 	tgt-mem-mode = <0x1>;
+ #else
+       /* QCN9000 tgt-mem-mode=0 layout - 55MB
+        * +=========+==============+=========+
+        * |  Region | Start Offset |   Size  |
+        * +---------+--------------+---------+
+-       * | HREMOTE |  0x51100000  |   45MB  |
+-       * +---------+--------------+---------+
+-       * | M3 Dump |  0x53E00000  |   1MB   |
++       * | HREMOTE |  0x51100000  |   46MB  |
+        * +---------+--------------+---------+
+        * |   ETR   |  0x53F00000  |   1MB   |
+        * +---------+--------------+---------+
+@@ -926,14 +1037,13 @@
+        * +==================================+
+        */
+ 	base-addr = <0x51100000>;
+-	m3-dump-addr = <0x53E00000>;
+ 	etr-addr = <0x53F00000>;
+ 	caldb-addr = <0x54000000>;
+-	hremote-size = <0x2D00000>;
++	hremote-size = <0x2E00000>;
+ 	tgt-mem-mode = <0x0>;
+ #endif
+ 	caldb-size = <0x800000>;
+-	board_id = <0xa4>;
++	board_id = <0xa4>;
+ 	status = "ok";
+ #if defined(__CNSS2__)
+ 	pcie0_mhi: pcie0_mhi {
+diff -Naur a/arch/arm64/boot/dts/qcom/qcom-ipq807x-soc.dtsi b/arch/arm64/boot/dts/qcom/qcom-ipq807x-soc.dtsi
+--- a/arch/arm64/boot/dts/qcom/qcom-ipq807x-soc.dtsi	2021-05-10 10:43:53.567568692 +0800
++++ b/arch/arm64/boot/dts/qcom/qcom-ipq807x-soc.dtsi	2021-05-10 10:50:17.000000000 +0800
+@@ -1775,7 +1775,7 @@
+ 				      "ahb",
+ 				      "axi_m_sticky";
+ 
+-			perst-gpio = <&tlmm 61 1>;
++			perst-gpio = <&tlmm 62 0>;
+ 			qcom,msi-gicm-addr = <0x0B00A040>;
+ 			qcom,msi-gicm-base = <0x1d0>;
+ 
+@@ -1813,14 +1813,13 @@
+ 		#else
+ 			qcom,tgt-mem-mode = <0>;
+ 		#endif
+-			qcom,bdf-addr = <0x4B0C0000 0x4B0C0000 0x4B0C0000
+-					 0x4B0C0000 0x4B0C0000>;
+-			qcom,caldb-addr = <0x4BA00000 0x4BA00000 0x0 0x4BA00000
+-					   0x4BA00000>;
++			qcom,bdf-addr = <0x4B0C0000 0x4B0C0000 0x4B0C0000>;
++			qcom,caldb-addr = <0x4BA00000 0x4BA00000 0x0>;
+ 			qcom,caldb-size = <0x480000>;
+ 			interrupts = <0 320 1>, /* o_wcss_apps_intr[0] =  */
+ 				<0 319 1>,
+ 				<0 318 1>,
++				<0 317 1>,
+ 				<0 316 1>,
+ 				<0 315 1>,
+ 				<0 314 1>,
+@@ -1877,6 +1876,7 @@
+ 			interrupt-names = "misc-pulse1",
+ 				"misc-latch",
+ 				"sw-exception",
++				"watchdog",
+ 				"ce0",
+ 				"ce1",
+ 				"ce2",
+@@ -1940,14 +1940,13 @@
+ 			qcom,tgt-mem-mode = <0>;
+ 		#endif
+ 			qcom,rproc = <&qcom_q6v5_wcss>;
+-			qcom,bdf-addr = <0x4B0C0000 0x4B0C0000 0x4B0C0000
+-					 0x4B0C0000 0x4B0C0000>;
+-			qcom,caldb-addr = <0x4BA00000 0x4BA00000 0x0 0x4BA00000
+-					   0x4BA00000>;
++			qcom,bdf-addr = <0x4B0C0000 0x4B0C0000 0x4B0C0000>;
++			qcom,caldb-addr = <0x4BA00000 0x4BA00000 0x0>;
+ 			qcom,caldb-size = <0x480000>;
+ 			interrupts = <0 320 1>, /* o_wcss_apps_intr[0] =  */
+ 				<0 319 1>,
+ 				<0 318 1>,
++				<0 317 1>,
+ 				<0 316 1>,
+ 				<0 315 1>,
+ 				<0 314 1>,
+@@ -2004,6 +2003,7 @@
+ 			interrupt-names = "misc-pulse1",
+ 				"misc-latch",
+ 				"sw-exception",
++				"watchdog",
+ 				"ce0",
+ 				"ce1",
+ 				"ce2",

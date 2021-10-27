@@ -1,0 +1,493 @@
+Index: linux-4.4.60/include/linux/mtd/mtd.h
+===================================================================
+--- linux-4.4.60.orig/include/linux/mtd/mtd.h
++++ linux-4.4.60/include/linux/mtd/mtd.h
+@@ -191,6 +191,7 @@ struct mtd_info {
+ 	 * wrappers instead.
+ 	 */
+ 	int (*_erase) (struct mtd_info *mtd, struct erase_info *instr);
++	int (*_panic_erase) (struct mtd_info *mtd, struct erase_info *instr);
+ 	int (*_point) (struct mtd_info *mtd, loff_t from, size_t len,
+ 		       size_t *retlen, void **virt, resource_size_t *phys);
+ 	int (*_unpoint) (struct mtd_info *mtd, loff_t from, size_t len);
+@@ -200,6 +201,8 @@ struct mtd_info {
+ 					     unsigned long flags);
+ 	int (*_read) (struct mtd_info *mtd, loff_t from, size_t len,
+ 		      size_t *retlen, u_char *buf);
++	int (*_panic_read) (struct mtd_info *mtd, loff_t from, size_t len,
++			    size_t *retlen, u_char *buf);
+ 	int (*_write) (struct mtd_info *mtd, loff_t to, size_t len,
+ 		       size_t *retlen, const u_char *buf);
+ 	int (*_panic_write) (struct mtd_info *mtd, loff_t to, size_t len,
+@@ -228,6 +231,7 @@ struct mtd_info {
+ 	int (*_is_locked) (struct mtd_info *mtd, loff_t ofs, uint64_t len);
+ 	int (*_block_isreserved) (struct mtd_info *mtd, loff_t ofs);
+ 	int (*_block_isbad) (struct mtd_info *mtd, loff_t ofs);
++	int (*_panic_block_isbad) (struct mtd_info *mtd, loff_t ofs);
+ 	int (*_block_markbad) (struct mtd_info *mtd, loff_t ofs);
+ 	int (*_suspend) (struct mtd_info *mtd);
+ 	void (*_resume) (struct mtd_info *mtd);
+@@ -270,6 +274,7 @@ static inline struct device_node *mtd_ge
+ }
+ 
+ int mtd_erase(struct mtd_info *mtd, struct erase_info *instr);
++int mtd_panic_erase(struct mtd_info *mtd, struct erase_info *instr);
+ int mtd_point(struct mtd_info *mtd, loff_t from, size_t len, size_t *retlen,
+ 	      void **virt, resource_size_t *phys);
+ int mtd_unpoint(struct mtd_info *mtd, loff_t from, size_t len);
+@@ -277,10 +282,24 @@ unsigned long mtd_get_unmapped_area(stru
+ 				    unsigned long offset, unsigned long flags);
+ int mtd_read(struct mtd_info *mtd, loff_t from, size_t len, size_t *retlen,
+ 	     u_char *buf);
++int mtd_panic_read(struct mtd_info *mtd, loff_t from, size_t len, size_t *retlen,
++		   u_char *buf);
++int mtd_read_skip_bad(struct mtd_info *mtd, loff_t from, size_t len,
++		      size_t *retlen, u_char *buf);
++int mtd_panic_read_skip_bad(struct mtd_info *mtd, loff_t from, size_t len,
++			    size_t *retlen, u_char *buf);
+ int mtd_write(struct mtd_info *mtd, loff_t to, size_t len, size_t *retlen,
+ 	      const u_char *buf);
+ int mtd_panic_write(struct mtd_info *mtd, loff_t to, size_t len, size_t *retlen,
+ 		    const u_char *buf);
++int mtd_write_skip_bad(struct mtd_info *mtd, loff_t to, size_t len,
++		       size_t *retlen, const u_char *buf);
++int mtd_panic_write_skip_bad(struct mtd_info *mtd, loff_t to, size_t len,
++			     size_t *retlen, const u_char *buf);
++int mtd_read_modify_write_skip_bad(struct mtd_info *mtd, loff_t to, size_t len,
++				   size_t *retlen, const u_char *buf, u_char *block_buf);
++int mtd_panic_read_modify_write_skip_bad(struct mtd_info *mtd, loff_t to, size_t len,
++					 size_t *retlen, const u_char *buf, u_char *block_buf);
+ 
+ int mtd_read_oob(struct mtd_info *mtd, loff_t from, struct mtd_oob_ops *ops);
+ 
+@@ -321,6 +340,7 @@ int mtd_unlock(struct mtd_info *mtd, lof
+ int mtd_is_locked(struct mtd_info *mtd, loff_t ofs, uint64_t len);
+ int mtd_block_isreserved(struct mtd_info *mtd, loff_t ofs);
+ int mtd_block_isbad(struct mtd_info *mtd, loff_t ofs);
++int mtd_panic_block_isbad(struct mtd_info *mtd, loff_t ofs);
+ int mtd_block_markbad(struct mtd_info *mtd, loff_t ofs);
+ 
+ static inline int mtd_suspend(struct mtd_info *mtd)
+Index: linux-4.4.60/drivers/mtd/mtdcore.c
+===================================================================
+--- linux-4.4.60.orig/drivers/mtd/mtdcore.c
++++ linux-4.4.60/drivers/mtd/mtdcore.c
+@@ -870,6 +870,22 @@ int mtd_erase(struct mtd_info *mtd, stru
+ }
+ EXPORT_SYMBOL_GPL(mtd_erase);
+ 
++int mtd_panic_erase(struct mtd_info *mtd, struct erase_info *instr)
++{
++	if (instr->addr > mtd->size || instr->len > mtd->size - instr->addr)
++		return -EINVAL;
++	if (!(mtd->flags & MTD_WRITEABLE))
++		return -EROFS;
++	instr->fail_addr = MTD_FAIL_ADDR_UNKNOWN;
++	if (!instr->len) {
++		instr->state = MTD_ERASE_DONE;
++		mtd_erase_callback(instr);
++		return 0;
++	}
++	return mtd->_panic_erase(mtd, instr);
++}
++EXPORT_SYMBOL_GPL(mtd_panic_erase);
++
+ /*
+  * This stuff for eXecute-In-Place. phys is optional and may be set to NULL.
+  */
+@@ -943,6 +959,128 @@ int mtd_read(struct mtd_info *mtd, loff_
+ }
+ EXPORT_SYMBOL_GPL(mtd_read);
+ 
++int mtd_panic_read(struct mtd_info *mtd, loff_t from, size_t len, size_t *retlen,
++	     u_char *buf)
++{
++	*retlen = 0;
++	if (from < 0 || from >= mtd->size || len > mtd->size - from)
++		return -EINVAL;
++	if (!len)
++		return 0;
++	return mtd->_panic_read(mtd, from, len, retlen, buf);
++}
++EXPORT_SYMBOL_GPL(mtd_panic_read);
++
++static int check_skip_len(struct mtd_info *mtd, loff_t offset, size_t length, int panic)
++{
++	size_t len_excl_bad = 0;
++	int ret = 0;
++
++	while (len_excl_bad < length) {
++		size_t block_len, block_off;
++		loff_t block_start;
++
++		if (offset >= mtd->size)
++			return -1;
++
++		block_start = offset & ~(loff_t)(mtd->erasesize - 1);
++		block_off = offset & (mtd->erasesize - 1);
++		block_len = mtd->erasesize - block_off;
++
++		if (panic ? !mtd_panic_block_isbad(mtd, block_start) : !mtd_block_isbad(mtd, block_start))
++			len_excl_bad += block_len;
++		else
++			ret = 1;
++
++		offset += block_len;
++	}
++
++	return ret;
++}
++
++/*
++ * Note the behavior differs from nand_read_skip_bad() in u-boot.
++ * nand_read_skip_bad() will read from the beginning of next good block.
++ * This method will preserve offset within the block.
++ */
++static int mtd_read_skip_bad_common(struct mtd_info *mtd, loff_t from, size_t len, size_t *retlen,
++		      u_char *buf, int panic)
++{
++	int rval;
++	size_t left_to_read = len;
++	u_char *p_buffer = buf;
++	int need_skip;
++
++	*retlen = 0;
++
++	if ((from & (mtd->writesize - 1)) != 0) {
++		pr_info("Attempt to read non page aligned data\n");
++		return -EINVAL;
++	}
++
++	need_skip = check_skip_len(mtd, from, len, panic);
++	if (need_skip < 0) {
++		pr_info("Attempt to read outside the flash area\n");
++		return -EINVAL;
++	}
++
++	if (!need_skip) {
++		rval = panic ? mtd_panic_read(mtd, from, len, retlen, buf) :
++					mtd_read(mtd, from, len, retlen, buf);
++		if (!rval || rval == -EUCLEAN)
++			return 0;
++
++		pr_info("NAND read from %llx failed %d\n",
++			from, rval);
++		return rval;
++	}
++
++	while (left_to_read > 0) {
++		size_t block_offset = from & (mtd->erasesize - 1);
++		size_t read_length;
++		size_t read_retlen;
++
++		if (panic ? mtd_panic_block_isbad(mtd, from & ~(mtd->erasesize - 1)) :
++				mtd_block_isbad(mtd, from & ~(mtd->erasesize - 1))) {
++			pr_info("Skipping bad block 0x%08llx\n",
++				from & ~(mtd->erasesize - 1));
++			from += mtd->erasesize;
++			continue;
++		}
++
++		read_length = min(left_to_read, mtd->erasesize - block_offset);
++
++		rval = panic ? mtd_panic_read(mtd, from, read_length, &read_retlen, p_buffer) :
++					mtd_read(mtd, from, read_length, &read_retlen, p_buffer);
++		if (rval && rval != -EUCLEAN) {
++			pr_info("NAND read from %llx failed %d\n",
++				from, rval);
++			return rval;
++		}
++
++		left_to_read -= read_retlen;
++		from += read_retlen;
++		p_buffer += read_retlen;
++		*retlen += read_retlen;
++	}
++
++	return 0;
++}
++
++int mtd_read_skip_bad(struct mtd_info *mtd, loff_t from, size_t len, size_t *retlen,
++		      u_char *buf)
++{
++	return mtd_read_skip_bad_common(mtd, from, len, retlen, buf, 0);
++}
++EXPORT_SYMBOL_GPL(mtd_read_skip_bad);
++
++int mtd_panic_read_skip_bad(struct mtd_info *mtd, loff_t from, size_t len, size_t *retlen,
++	     		    u_char *buf)
++{
++	return mtd_read_skip_bad_common(mtd, from, len, retlen, buf, 1);
++}
++EXPORT_SYMBOL_GPL(mtd_panic_read_skip_bad);
++
+ int mtd_write(struct mtd_info *mtd, loff_t to, size_t len, size_t *retlen,
+ 	      const u_char *buf)
+ {
+@@ -1002,6 +1140,249 @@ int mtd_read_oob(struct mtd_info *mtd, l
+ EXPORT_SYMBOL_GPL(mtd_read_oob);
+ 
+ /*
++ * Note the behavior differs from nand_write_skip_bad() in u-boot.
++ * nand_write_skip_bad() will write from the beginning of next good block.
++ * This method will preserve offset within the block.
++ */
++static int mtd_write_skip_bad_common(struct mtd_info *mtd, loff_t to, size_t len, size_t *retlen,
++				     const u_char *buf, int panic)
++{
++	int rval = 0;
++	size_t blocksize, left_to_write = len;
++	const u_char *p_buffer = buf;
++	int need_skip;
++
++	blocksize = mtd->erasesize;
++	*retlen = 0;
++
++	if ((to & (mtd->writesize - 1)) != 0) {
++		pr_info("Attempt to write non page aligned data\n");
++		return -EINVAL;
++	}
++
++	need_skip = check_skip_len(mtd, to, len, panic);
++	if (need_skip < 0) {
++		pr_info("Attempt to write outside the flash area\n");
++		return -EINVAL;
++	}
++
++	if (!need_skip) {
++		rval = panic ? mtd_panic_write(mtd, to, len, retlen, buf) : mtd_write(mtd, to, len, retlen, buf);
++		if (rval == 0)
++			return 0;
++
++		pr_info("NAND write to %llx failed %d\n",
++			to, rval);
++		return rval;
++	}
++
++	while (left_to_write > 0) {
++		size_t block_offset = to & (mtd->erasesize - 1);
++		size_t write_size;
++		size_t write_retlen;
++
++		if (panic ? mtd_panic_block_isbad(mtd, to & ~(mtd->erasesize - 1)) :
++				mtd_block_isbad(mtd, to & ~(mtd->erasesize - 1))) {
++			pr_info("Skip bad block 0x%08llx\n",
++				to & ~(mtd->erasesize - 1));
++			to += mtd->erasesize;
++			continue;
++		}
++
++		write_size = min(left_to_write, blocksize - block_offset);
++
++		rval = panic ? mtd_panic_write(mtd, to, write_size, &write_retlen, p_buffer) :
++					mtd_write(mtd, to, write_size, &write_retlen, p_buffer);
++		if (rval != 0) {
++			pr_info("NAND write to %llx failed %d\n",
++				to, rval);
++			return rval;
++		}
++
++		to += write_retlen;
++		p_buffer += write_retlen;
++		left_to_write -= write_retlen;
++		*retlen += write_retlen;
++	}
++
++	return 0;
++}
++
++int mtd_write_skip_bad(struct mtd_info *mtd, loff_t to, size_t len, size_t *retlen,
++		       const u_char *buf)
++{
++	return mtd_write_skip_bad_common(mtd, to, len, retlen, buf, 0);
++}
++EXPORT_SYMBOL_GPL(mtd_write_skip_bad);
++
++int mtd_panic_write_skip_bad(struct mtd_info *mtd, loff_t to, size_t len, size_t *retlen,
++			     const u_char *buf)
++{
++	return mtd_write_skip_bad_common(mtd, to, len, retlen, buf, 1);
++}
++EXPORT_SYMBOL_GPL(mtd_panic_write_skip_bad);
++
++static void erase_done_callback(struct erase_info *ei_ptr)
++{
++	struct completion *done = (struct completion *)ei_ptr->priv;
++	complete(done);
++}
++
++static int mtd_read_modify_write_skip_bad_common(struct mtd_info *mtd, loff_t to,
++						 size_t len, size_t *retlen,
++						 const u_char *buf, u_char *block_buf,
++						 int panic)
++{
++	int rval = 0;
++	int need_skip = 0;
++	size_t left_to_write;
++	size_t block_size;
++	int rmw = 0;
++	u_char *rmw_buf = NULL;
++	u_char *local_buf = NULL;
++	struct erase_info ei;
++	DECLARE_COMPLETION_ONSTACK(erase_done);
++
++	*retlen = 0;
++
++	need_skip = check_skip_len(mtd, to, len, panic);
++	if (need_skip < 0) {
++		pr_info("Not enough space in good blocks\n");
++		return -EINVAL;
++	}
++
++	/* If write doesn't start from block boundary or length is not a multiple of block size */
++	if (to & (mtd->erasesize - 1) || len & (mtd->erasesize - 1)) {
++		rmw = 1;
++		if (block_buf) {
++			rmw_buf = block_buf;
++		} else {
++			local_buf = kmalloc(mtd->erasesize, panic ? GFP_ATOMIC : GFP_KERNEL);
++			if (local_buf == NULL) {
++				rval = -ENOMEM;
++				goto out;
++			}
++			rmw_buf = local_buf;
++		}
++	}
++
++	left_to_write = len;
++	block_size = mtd->erasesize;
++
++	while (left_to_write > 0) {
++		size_t block_start = to & ~(mtd->erasesize - 1);
++		size_t block_offset = to & (mtd->erasesize - 1);
++		size_t read_retlen, write_retlen, content_len, content_wrote;
++
++		if (panic ? mtd_panic_block_isbad(mtd, block_start) :
++				mtd_block_isbad(mtd, block_start)) {
++			pr_info("Skip bad block 0x%zx\n", block_start);
++			to += block_size;
++			continue;
++		}
++
++		if (rmw) {
++			rval = panic ? mtd_panic_read(mtd, block_start, block_size, &read_retlen, rmw_buf) :
++					mtd_read(mtd, block_start, block_size, &read_retlen, rmw_buf);
++
++			if (rval < 0 && rval != -EUCLEAN) {
++				pr_info("NAND read from %zx failed %d\n", block_start, rval);
++				goto out;
++			}
++
++			content_len = min(left_to_write, block_size - block_offset);
++			memcpy(rmw_buf + block_offset, buf + len - left_to_write, content_len);
++		} else {
++			content_len = block_size;
++			rmw_buf = (u_char *)buf + block_start;
++		}
++
++		/* panic_erase should be a synchronous operation */
++		ei.mtd = mtd;
++		ei.addr = block_start;
++		ei.len = block_size;
++		ei.callback = panic ? NULL : erase_done_callback;
++		ei.priv = panic ? 0 : (u_long)&erase_done;
++		rval = panic ? mtd_panic_erase(mtd, &ei) : mtd_erase(mtd, &ei);
++		if (rval != 0) {
++			pr_info("New bad block %zx\n", block_start);
++			if (!panic) {
++				mtd_block_markbad(mtd, block_start);
++				to += block_size;
++				continue;
++			} else {
++				pr_info("Skip markbad due to system in panic\n");
++				goto out;
++			}
++		}
++
++		if (!panic && ei.state == MTD_ERASE_PENDING)
++			wait_for_completion_timeout(&erase_done, 1 * HZ);
++
++		if (ei.state != MTD_ERASE_DONE) {
++			pr_info("New bad block %zx\n", block_start);
++			if (!panic) {
++				mtd_block_markbad(mtd, block_start);
++				to += block_size;
++				continue;
++			} else {
++				pr_info("Skip markbad due to system in panic\n");
++				goto out;
++			}
++		}
++
++		rval = panic ? mtd_panic_write(mtd, block_start, block_size, &write_retlen, rmw_buf) :
++					mtd_write(mtd, block_start, block_size, &write_retlen, rmw_buf);
++		if (rval != 0) {
++			pr_info("NAND write to %llx failed %d\n", to, rval);
++			goto out;
++		}
++
++		content_wrote = min(content_len, write_retlen);
++		to += content_wrote;
++		left_to_write -= content_wrote;
++		*retlen += content_wrote;
++	}
++
++out:
++	if (local_buf)
++		kfree(local_buf);
++	return rval;
++}
++
++int mtd_read_modify_write_skip_bad(struct mtd_info *mtd, loff_t to, size_t len,
++				   size_t *retlen, const u_char *buf, u_char *block_buf)
++{
++	*retlen = 0;
++	if (to < 0 || to > mtd->size || len > mtd->size - to)
++		return -EINVAL;
++	if (!(mtd->flags & MTD_WRITEABLE))
++		return -EROFS;
++	if (!len)
++		return 0;
++
++	return mtd_read_modify_write_skip_bad_common(mtd, to, len, retlen, buf, block_buf, 0);
++}
++EXPORT_SYMBOL_GPL(mtd_read_modify_write_skip_bad);
++
++int mtd_panic_read_modify_write_skip_bad(struct mtd_info *mtd, loff_t to, size_t len,
++					 size_t *retlen, const u_char *buf, u_char *block_buf)
++{
++	*retlen = 0;
++	if ((!mtd->_panic_read) || (!mtd->_panic_write))
++		return -EOPNOTSUPP;
++	if (to < 0 || to > mtd->size || len > mtd->size - to)
++		return -EINVAL;
++	if (!(mtd->flags & MTD_WRITEABLE))
++		return -EROFS;
++	if (!len)
++		return 0;
++
++	return mtd_read_modify_write_skip_bad_common(mtd, to, len, retlen, buf, block_buf, 1);
++}
++EXPORT_SYMBOL_GPL(mtd_panic_read_modify_write_skip_bad);
++
++/*
+  * Method to access the protection register area, present in some flash
+  * devices. The user data is one time programmable but the factory data is read
+  * only.
+@@ -1141,6 +1522,16 @@ int mtd_block_isbad(struct mtd_info *mtd
+ }
+ EXPORT_SYMBOL_GPL(mtd_block_isbad);
+ 
++int mtd_panic_block_isbad(struct mtd_info *mtd, loff_t ofs)
++{
++	if (!mtd->_panic_block_isbad)
++		return 0;
++	if (ofs < 0 || ofs > mtd->size)
++		return -EINVAL;
++	return mtd->_panic_block_isbad(mtd, ofs);
++}
++EXPORT_SYMBOL_GPL(mtd_panic_block_isbad);
++
+ int mtd_block_markbad(struct mtd_info *mtd, loff_t ofs)
+ {
+ 	if (!mtd->_block_markbad)

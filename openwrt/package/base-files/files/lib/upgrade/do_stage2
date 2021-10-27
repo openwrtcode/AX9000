@@ -1,0 +1,33 @@
+#!/bin/sh
+
+# copyright            : (C) by 2021 Lin kai 
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as         
+# published by the Free Software Foundation                                
+# You may obtain a copy of the License at                                   
+# https://opensource.org/licenses/gpl-2.0.php 
+
+
+. /lib/functions.sh
+
+include /lib/upgrade
+
+v "Performing system upgrade..."
+if type 'platform_do_upgrade' >/dev/null 2>/dev/null; then
+	platform_do_upgrade "$IMAGE"
+else
+	default_do_upgrade "$IMAGE"
+fi
+
+if [ -n "$UPGRADE_BACKUP" ] && type 'platform_copy_config' >/dev/null 2>/dev/null; then
+	platform_copy_config
+fi
+
+v "Upgrade completed"
+sleep 1
+
+v "Rebooting system..."
+umount -a
+reboot -f
+sleep 5
+echo b 2>/dev/null >/proc/sysrq-trigger

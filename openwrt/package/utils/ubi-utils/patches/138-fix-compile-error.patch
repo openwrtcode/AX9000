@@ -1,0 +1,11 @@
+diff -Naur a/mkfs.ubifs/mkfs.ubifs.c b/mkfs.ubifs/mkfs.ubifs.c
+--- a/mkfs.ubifs/mkfs.ubifs.c	2021-05-07 20:23:34.675852852 +0800
++++ b/mkfs.ubifs/mkfs.ubifs.c	2021-05-07 20:24:09.076085036 +0800
+@@ -23,6 +23,7 @@
+ #define _XOPEN_SOURCE 500 /* For realpath() */
+ #define PROGRAM_NAME "mkfs.ubifs"
+ 
++#include <sys/sysmacros.h>
+ #include "mkfs.ubifs.h"
+ #include <crc32.h>
+ #include "common.h"

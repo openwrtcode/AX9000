@@ -1,0 +1,663 @@
+Source-Makefile: feeds/luci/applications/luci-app-vnstat2/Makefile
+Build-Depends: lua/host luci-base/host LUCI_CSSTIDY:csstidy/host LUCI_SRCDIET:luasrcdiet/host 
+
+Package: luci-app-vnstat2
+Submenu: 3. Applications
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread +luci-lib-jsonc +vnstat2 +vnstati2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: LuCI Support for vnStat 2
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Description: LuCI Support for vnStat 2
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-ar
+Default: LUCI_LANG_ar||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - ar translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - ا�
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-bg
+Default: LUCI_LANG_bg||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - bg translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - български (Bulgarian)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-bn
+Default: LUCI_LANG_bn_BD||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - bn translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - বাংলা (Bengali)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-ca
+Default: LUCI_LANG_ca||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - ca translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - Català (Catalan)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-cs
+Default: LUCI_LANG_cs||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - cs translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - Čeština (Czech)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-de
+Default: LUCI_LANG_de||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - de translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - Deutsch (German)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-el
+Default: LUCI_LANG_el||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - el translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - Ελληνικά (Greek)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-en
+Default: LUCI_LANG_en||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - en translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - English
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-es
+Default: LUCI_LANG_es||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - es translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - Español (Spanish)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-fi
+Default: LUCI_LANG_fi||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - fi translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - Suomi (Finnish)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-fr
+Default: LUCI_LANG_fr||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - fr translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - Français (French)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-he
+Default: LUCI_LANG_he||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - he translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - עִבְרִית (Hebrew)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-hi
+Default: LUCI_LANG_hi||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - hi translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - हिंदी (Hindi)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-hu
+Default: LUCI_LANG_hu||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - hu translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - Magyar (Hungarian)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-it
+Default: LUCI_LANG_it||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - it translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - Italiano (Italian)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-ja
+Default: LUCI_LANG_ja||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - ja translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - 日本語 (Japanese)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-ko
+Default: LUCI_LANG_ko||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - ko translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - 한국어 (Korean)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-mr
+Default: LUCI_LANG_mr||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - mr translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - Marāṭhī (Marathi)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-ms
+Default: LUCI_LANG_ms||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - ms translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - Bahasa Melayu (Malay)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-no
+Default: LUCI_LANG_nb_NO||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - no translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - Norsk (Norwegian)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-pl
+Default: LUCI_LANG_pl||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - pl translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - Polski (Polish)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-pt
+Default: LUCI_LANG_pt||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - pt translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - Português (Portuguese)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-pt-br
+Default: LUCI_LANG_pt_BR||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - pt-br translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - Português do Brasil (Brazilian Portuguese)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-ro
+Default: LUCI_LANG_ro||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - ro translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - Română (Romanian)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-ru
+Default: LUCI_LANG_ru||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - ru translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - Русский (Russian)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-sk
+Default: LUCI_LANG_sk||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - sk translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - Slovenčina (Slovak)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-sv
+Default: LUCI_LANG_sv||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - sv translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - Svenska (Swedish)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-tr
+Default: LUCI_LANG_tr||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - tr translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - Türkçe (Turkish)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-uk
+Default: LUCI_LANG_uk||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - uk translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - Українська (Ukrainian)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-vi
+Default: LUCI_LANG_vi||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - vi translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - Tiếng Việt (Vietnamese)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-zh-cn
+Default: LUCI_LANG_zh_Hans||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - zh-cn translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - 简体中文 (Chinese Simplified)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+Package: luci-i18n-vnstat2-zh-tw
+Default: LUCI_LANG_zh_Hant||(ALL&&m)
+Version: x
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread luci-app-vnstat2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci
+Category: LuCI
+Repository: base
+Title: luci-app-vnstat2 - zh-tw translation
+Maintainer: Jan Hoffmann <jan@3e8.eu>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Hidden: 1
+Description:     Translation for luci-app-vnstat2 - 繁體中文 (Chinese Traditional)
+Jan Hoffmann <jan@3e8.eu>
+@@
+
+

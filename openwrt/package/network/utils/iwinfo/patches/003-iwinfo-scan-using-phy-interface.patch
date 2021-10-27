@@ -1,0 +1,24 @@
+Index: libiwinfo-2021-01-06-23d2722b/iwinfo_nl80211.c
+===================================================================
+--- libiwinfo-2021-01-06-23d2722b.orig/iwinfo_nl80211.c
++++ libiwinfo-2021-01-06-23d2722b/iwinfo_nl80211.c
+@@ -2734,6 +2734,7 @@ static int nl80211_get_scanlist(const ch
+ 	/* Got a radioX pseudo interface, find some interface on it or create one */
+ 	if (!strncmp(ifname, "radio", 5))
+ 	{
++#if 0
+ 		/* Reuse existing interface */
+ 		if ((res = nl80211_phy2ifname(ifname)) != NULL)
+ 		{
+@@ -2747,6 +2748,11 @@ static int nl80211_get_scanlist(const ch
+ 			nl80211_ifdel(res);
+ 			return rv;
+ 		}
++#endif
++		// For AX9000 just using phyx to scan
++		char phy[8] = {'p', 'h', 'y', 0, 0};
++		phy[3] = ifname[5];
++		return nl80211_get_scanlist(phy, buf, len);
+ 	}
+ 
+ 	/* WPA supplicant */

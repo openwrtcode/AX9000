@@ -1,0 +1,29 @@
+Index: backports-20200902_001-4.4.60-931c337125/drivers/net/wireless/ath/ath11k/dbring.c
+===================================================================
+--- backports-20200902_001-4.4.60-931c337125.orig/drivers/net/wireless/ath/ath11k/dbring.c
++++ backports-20200902_001-4.4.60-931c337125/drivers/net/wireless/ath/ath11k/dbring.c
+@@ -91,8 +91,9 @@ static int ath11k_dbring_bufs_replenish(
+ 		 FIELD_PREP(DP_RXDMA_BUF_COOKIE_BUF_ID, buf_id);
+ 
+ 	ath11k_hal_rx_buf_addr_info_set(desc, paddr, cookie, 0);
+-
++#ifdef CPTCFG_ATH11K_DEBUG
+ 	ath11k_dbring_add_debug_entry(ar, id, DBR_RING_DEBUG_EVENT_REPLENISH, srng);
++#endif
+ 	ath11k_hal_srng_access_end(ab, srng);
+ 
+ 	return 0;
+
+--- backports-20200902_001-4.4.60-931c337125.orig/drivers/net/wireless/ath/ath11k/dbring.c
++++ backports-20200902_001-4.4.60-931c337125/drivers/net/wireless/ath/ath11k/dbring.c
+@@ -355,8 +355,10 @@ int ath11k_dbring_buffer_release_event(s
+ 		dma_unmap_single(ab->dev, buff->paddr, ring->buf_sz,
+ 				 DMA_FROM_DEVICE);
+ 
++#ifdef CPTCFG_ATH11K_DEBUG
+ 		ath11k_dbring_add_debug_entry(ar, module_id,
+ 					      DBR_RING_DEBUG_EVENT_RX, srng);
++#endif
+ 
+ 		if (ring->handler) {
+ 			vaddr_unalign = buff->payload;

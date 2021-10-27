@@ -1,0 +1,11 @@
+diff -Naur a/ubi-utils/libubi.c b/ubi-utils/libubi.c
+--- a/ubi-utils/libubi.c	2021-05-07 20:20:25.106383213 +0800
++++ b/ubi-utils/libubi.c	2021-05-07 20:22:05.527205101 +0800
+@@ -22,6 +22,7 @@
+ 
+ #define PROGRAM_NAME "libubi"
+ 
++#include <sys/sysmacros.h>
+ #include <stdlib.h>
+ #include <stdio.h>
+ #include <string.h>

@@ -1,0 +1,29 @@
+Source-Makefile: feeds/packages/lang/luv/Makefile
+Build-Depends: ninja/host
+Build-Depends/host: ninja/host
+
+Package: luv
+Submenu: Lua
+Version: 1.40.0-0
+Depends: +libc +USE_GLIBC:librt +USE_GLIBC:libpthread +libuv +!LUV_USE_LUAJIT_ENGINE:lua
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: lang
+Category: Languages
+Repository: base
+Title: Luv
+Maintainer: Morteza Milani <milani@pichak.co>
+Source: luv-1.40.0-0.tar.gz
+License: Apache-2.0
+LicenseFiles: LICENSE
+Type: ipkg
+Description:   Bare libuv bindings for lua
+https://github.com/luvit/luv
+Morteza Milani <milani@pichak.co>
+@@
+Config:
+	source "feeds/packages/lang/luv/Config.in"
+@@
+
+
