@@ -1,5 +1,5 @@
 This project is a linux operating system targeting embedded devices,
-comes from openwrt project and qualcomm's open source software.
+comes from openwrt project and qualcomm's open source software.This project supports for xiaomi AX9000.
 
 ## Requirements
 
@@ -23,4 +23,4 @@ cross-compile the Linux kernel & all chosen applications for your target system.
 
 ## Rom
 
-The compiled firmware opensource-firmware-1.0.4.bin in the rom folder.
+The compiled firmware opensource-firmware-1.0.4.bin in AX9000/rom
