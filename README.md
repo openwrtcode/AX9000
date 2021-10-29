@@ -15,7 +15,7 @@ subversion libz-dev libc-dev rsync
 $ cd AX9000
 $ cp .config.AX9000 .config
 $ make defconfig
-$ make -j1 V=s
+$ make
 ```
 
 This will download all sources, build the cross-compile toolchain and then 
